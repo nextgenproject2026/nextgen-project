@@ -129,8 +129,8 @@
       Ora puoi accedere, comprare i biglietti e far parte della community.
     </p>
 
-    <a href="dashboard.html" class="btn-primary">Vai alla tua area</a>
-    <a href="index.html" class="btn-secondary">Home</a>
+    <a href="index.html" class="btn-primary">Vai alla home</a>
+    
 
     <div class="countdown">Redirect automatico tra <span id="count">5</span> secondi...</div>
   </div>
@@ -141,14 +141,26 @@
     const { createClient } = supabase;
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Supabase gestisce il token dall'URL automaticamente
-    sb.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+    async function verifyToken() {
+      const params = new URLSearchParams(window.location.search);
+      const token_hash = params.get('token_hash');
+      const type = params.get('type');
+
+      if (token_hash && type) {
+        const { error } = await sb.auth.verifyOtp({ token_hash, type });
+        if (!error) {
+          startCountdown();
+          return;
+        }
+      }
+
+      // Fallback: controlla se già loggato
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) {
         startCountdown();
       }
-    });
+    }
 
-    // Countdown redirect
     let count = 5;
     function startCountdown() {
       const el = document.getElementById('count');
@@ -157,13 +169,12 @@
         el.textContent = count;
         if (count <= 0) {
           clearInterval(interval);
-          window.location.href = 'dashboard.html';
+          window.location.href = 'index.html';
         }
       }, 1000);
     }
 
-    // Avvia countdown comunque dopo 1s (fallback)
-    setTimeout(startCountdown, 1000);
+    verifyToken();
   </script>
 </body>
 </html>
