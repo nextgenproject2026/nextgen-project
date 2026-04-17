@@ -171,26 +171,60 @@
   <div class="modal-overlay" id="modal">
     <div class="modal">
       <button class="modal-close" onclick="closeModal()">×</button>
-      <h3 id="m-title">Prenota</h3>
+      <h3 id="m-title">Prenota il tuo posto</h3>
       <p class="modal-sub" id="m-sub"></p>
-      <div id="m-guest">
-        <div class="fg"><label>Nome completo</label><input type="text" id="b-name" placeholder="Mario Rossi"></div>
-        <div class="fg"><label>Email</label><input type="email" id="b-email" placeholder="tua@email.com"></div>
-        <div class="fg"><label>Password (per accedere alla tua area)</label><input type="password" id="b-pw" placeholder="Min. 8 caratteri"></div>
-        <div class="msg" id="m-msg"></div>
+
+      <!-- STEP 1: già loggato -->
+      <div id="step-loggedin" style="display:none;">
+        <div style="background:var(--bg-3);border:1px solid var(--border);border-radius:4px;padding:14px 16px;margin-bottom:20px;font-size:14px;color:var(--gray-1);">
+          Stai prenotando come <strong id="m-user-email"></strong>
+        </div>
+        <div class="msg" id="msg-loggedin"></div>
         <div class="modal-actions">
-          <button class="btn-primary" id="m-btn" onclick="confirmGuest()">Conferma prenotazione</button>
+          <button class="btn-primary" id="btn-loggedin" onclick="confirmUser()">Conferma prenotazione</button>
           <button class="btn-secondary" onclick="closeModal()">Annulla</button>
         </div>
       </div>
-      <div id="m-user" style="display:none;">
-        <p style="font-size:14px;color:var(--gray-1);margin-bottom:16px;">Stai prenotando come <strong id="m-user-email"></strong></p>
-        <div class="msg" id="m-msg2"></div>
+
+      <!-- STEP 1: non loggato — scegli -->
+      <div id="step-choose" style="display:none;">
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <button class="btn-primary" onclick="showStep('login')" style="text-align:left;padding:16px 18px;">
+            <div style="font-size:13px;font-weight:900;">Ho già un account</div>
+            <div style="font-size:11px;font-weight:400;color:var(--gray-3);margin-top:3px;text-transform:none;letter-spacing:0;">Accedi e completa la prenotazione</div>
+          </button>
+          <button class="btn-primary" onclick="showStep('register')" style="text-align:left;padding:16px 18px;background:transparent;color:var(--white);border:1px solid var(--border);">
+            <div style="font-size:13px;font-weight:900;">Sono nuovo</div>
+            <div style="font-size:11px;font-weight:400;color:var(--gray-3);margin-top:3px;text-transform:none;letter-spacing:0;">Crea account e prenota in 1 minuto</div>
+          </button>
+        </div>
+        <button class="btn-secondary" onclick="closeModal()" style="width:100%;margin-top:12px;">Annulla</button>
+      </div>
+
+      <!-- STEP 2a: login -->
+      <div id="step-login" style="display:none;">
+        <div class="fg"><label>Email</label><input type="email" id="l-email" placeholder="tua@email.com"></div>
+        <div class="fg"><label>Password</label><input type="password" id="l-pw" placeholder="••••••••"></div>
+        <div class="msg" id="msg-login"></div>
         <div class="modal-actions">
-          <button class="btn-primary" id="m-btn2" onclick="confirmUser()">Conferma prenotazione</button>
-          <button class="btn-secondary" onclick="closeModal()">Annulla</button>
+          <button class="btn-primary" id="btn-login" onclick="doLogin()">Accedi e prenota</button>
+          <button class="btn-secondary" onclick="showStep('choose')">← Indietro</button>
         </div>
       </div>
+
+      <!-- STEP 2b: registrazione -->
+      <div id="step-register" style="display:none;">
+        <div class="fg"><label>Nome completo</label><input type="text" id="r-name" placeholder="Mario Rossi"></div>
+        <div class="fg"><label>Email</label><input type="email" id="r-email" placeholder="tua@email.com"></div>
+        <div class="fg"><label>Password</label><input type="password" id="r-pw" placeholder="Min. 8 caratteri"></div>
+        <div style="font-size:11px;color:var(--gray-3);margin-top:-4px;margin-bottom:4px;">Verrà creato automaticamente il tuo profilo nella community NextGen.</div>
+        <div class="msg" id="msg-register"></div>
+        <div class="modal-actions">
+          <button class="btn-primary" id="btn-register" onclick="doRegister()">Registrati e prenota</button>
+          <button class="btn-secondary" onclick="showStep('choose')">← Indietro</button>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -286,42 +320,81 @@
 
     function openModal(m) {
       mode = m;
+      const priceStr = m === 'online'
+        ? (ev.current_online_price ? '€' + (ev.current_online_price/100).toFixed(0) : '')
+        : '€25';
       document.getElementById('m-title').textContent = m === 'online' ? 'Prenota e paga online' : 'Prenota — paga in sede';
-      document.getElementById('m-sub').textContent = m === 'online' ? 'Pagamento sicuro con Stripe.' : 'Prenota ora, porta €25 all\'ingresso.';
+      document.getElementById('m-sub').textContent = m === 'online'
+        ? `Pagamento sicuro con Stripe. ${priceStr}`
+        : 'Prenota ora, porta €25 all\'ingresso.';
+
       if (user) {
-        document.getElementById('m-guest').style.display = 'none';
-        document.getElementById('m-user').style.display = 'block';
+        showStep('loggedin');
         document.getElementById('m-user-email').textContent = user.email;
       } else {
-        document.getElementById('m-guest').style.display = 'block';
-        document.getElementById('m-user').style.display = 'none';
+        showStep('choose');
       }
       document.getElementById('modal').classList.add('open');
     }
-    function closeModal() { document.getElementById('modal').classList.remove('open'); }
-    document.getElementById('modal').addEventListener('click', e => { if (e.target === document.getElementById('modal')) closeModal(); });
 
-    async function confirmGuest() {
-      const name = document.getElementById('b-name').value.trim();
-      const email = document.getElementById('b-email').value.trim();
-      const pw = document.getElementById('b-pw').value;
-      if (!name||!email||!pw) return msg('m-msg','Compila tutti i campi.','error');
-      if (pw.length < 8) return msg('m-msg','Password minimo 8 caratteri.','error');
-      document.getElementById('m-btn').disabled = true;
-      document.getElementById('m-btn').textContent = 'In corso...';
-      let uid;
+    function showStep(name) {
+      ['loggedin','choose','login','register'].forEach(s => {
+        document.getElementById('step-' + s).style.display = 'none';
+      });
+      document.getElementById('step-' + name).style.display = 'block';
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('open');
+    }
+
+    document.getElementById('modal').addEventListener('click', e => {
+      if (e.target === document.getElementById('modal')) closeModal();
+    });
+
+    async function doLogin() {
+      const email = document.getElementById('l-email').value.trim();
+      const pw = document.getElementById('l-pw').value;
+      if (!email || !pw) return showMsg('msg-login', 'Compila tutti i campi.', 'error');
+      document.getElementById('btn-login').disabled = true;
+      document.getElementById('btn-login').textContent = 'Accesso in corso...';
+      const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
+      if (error) {
+        document.getElementById('btn-login').disabled = false;
+        document.getElementById('btn-login').textContent = 'Accedi e prenota';
+        return showMsg('msg-login', 'Email o password errati.', 'error');
+      }
+      user = data.user;
+      await book(user.id, user.email);
+    }
+
+    async function doRegister() {
+      const name = document.getElementById('r-name').value.trim();
+      const email = document.getElementById('r-email').value.trim();
+      const pw = document.getElementById('r-pw').value;
+      if (!name || !email || !pw) return showMsg('msg-register', 'Compila tutti i campi.', 'error');
+      if (pw.length < 8) return showMsg('msg-register', 'Password minimo 8 caratteri.', 'error');
+      document.getElementById('btn-register').disabled = true;
+      document.getElementById('btn-register').textContent = 'Registrazione in corso...';
       const { data: su, error: se } = await sb.auth.signUp({ email, password: pw, options: { data: { full_name: name } } });
       if (se) {
+        // Prova login se account già esiste
         const { data: si, error: sie } = await sb.auth.signInWithPassword({ email, password: pw });
-        if (sie) { document.getElementById('m-btn').disabled = false; document.getElementById('m-btn').textContent = 'Conferma prenotazione'; return msg('m-msg', sie.message, 'error'); }
-        uid = si.user.id; user = si.user;
-      } else { uid = su.user.id; user = su.user; }
-      await book(uid, email);
+        if (sie) {
+          document.getElementById('btn-register').disabled = false;
+          document.getElementById('btn-register').textContent = 'Registrati e prenota';
+          return showMsg('msg-register', sie.message, 'error');
+        }
+        user = si.user;
+      } else {
+        user = su.user;
+      }
+      await book(user.id, email);
     }
 
     async function confirmUser() {
-      document.getElementById('m-btn2').disabled = true;
-      document.getElementById('m-btn2').textContent = 'In corso...';
+      document.getElementById('btn-loggedin').disabled = true;
+      document.getElementById('btn-loggedin').textContent = 'In corso...';
       await book(user.id, user.email);
     }
 
@@ -334,20 +407,20 @@
           if (error) throw new Error(error);
           window.location.href = url;
         } catch(e) {
-          msg('m-msg', e.message, 'error');
+          showMsg('msg-loggedin', e.message, 'error');
           document.getElementById('m-btn').disabled = false;
           document.getElementById('m-btn').textContent = 'Conferma prenotazione';
         }
       } else {
         const { error } = await sb.from('tickets').insert({ event_id: ev.id, user_id: uid, ticket_type: 'standard', price_paid: ev.price_onsite || 2500, payment_method: 'onsite', status: 'confirmed' });
-        if (error) { msg(user ? 'm-msg2' : 'm-msg', error.message, 'error'); document.getElementById('m-btn2').disabled = false; document.getElementById('m-btn2').textContent = 'Conferma prenotazione'; return; }
+        if (error) { showMsg('msg-loggedin', error.message, 'error'); document.getElementById('btn-loggedin').disabled = false; document.getElementById('btn-loggedin').textContent = 'Conferma prenotazione'; return; }
         await sb.rpc('increment_tickets_sold', { event_id: ev.id });
         closeModal();
         document.getElementById('booking-btns').innerHTML = '<div class="success-box"><strong>Posto confermato!</strong><br>Ti aspettiamo. Ricorda di portare €25 all\'ingresso.</div>';
       }
     }
 
-    function msg(id, text, type) {
+    function showMsg(id, text, type) {
       const el = document.getElementById(id);
       if (!el) return;
       el.textContent = text; el.className = 'msg ' + type;
