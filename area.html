@@ -384,7 +384,7 @@
             </div>
           </div>
           <div style="display:flex;gap:12px;margin-top:24px;">
-            <button class="btn-primary" onclick="createEvent()">Crea evento</button>
+            <button class="btn-primary" onclick="createNewEvent()">Crea evento</button>
           </div>
           <div class="msg" id="event-msg"></div>
         </div>
@@ -456,7 +456,7 @@
       }
     }
 
-    async function createEvent() {
+    async function createNewEvent() {
       const title = document.getElementById('ev-title').value;
       const date = document.getElementById('ev-date').value;
       if (!title || !date) return showMsg('event-msg', 'Titolo e data obbligatori.', 'error');
@@ -470,14 +470,14 @@
         location: document.getElementById('ev-location').value,
         price_early_bird: priceEb,
         price_standard: priceStd,
-        price_on_site: priceSite,
-        early_bird_days: parseInt(document.getElementById('ev-eb-days').value || 5),
-        registration_open_at: document.getElementById('ev-open-at').value || null,
+        price_onsite: priceSite,
+        price_early_bird_days: parseInt(document.getElementById('ev-eb-days').value || 5),
+        early_bird_start: document.getElementById('ev-open-at').value || null,
         capacity: parseInt(document.getElementById('ev-capacity').value || 100),
         speaker_name: document.getElementById('ev-speaker-name').value || null,
         speaker_bio: document.getElementById('ev-speaker-bio').value || null,
-        agenda: document.getElementById('ev-agenda').value || null,
-        cover_url: document.getElementById('ev-cover').value || null,
+        program: document.getElementById('ev-agenda').value || null,
+        cover_image_url: document.getElementById('ev-cover').value || null,
         is_published: document.getElementById('ev-status').value === 'true'
       }).select().single();
       if (error) return showMsg('event-msg', 'Errore: ' + error.message, 'error');
