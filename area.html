@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>La mia area — NextGen</title>
+  <link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0a; --bg-2: #111111; --bg-3: #1a1a1a;
+      --white: #fff; --gray-1: #e8e8e8; --gray-2: #a0a0a0; --gray-3: #444;
+      --border: rgba(255,255,255,0.1); --border-h: rgba(255,255,255,0.25);
+      --font: 'Satoshi', sans-serif;
+    }
+    body { font-family: var(--font); background: var(--bg); color: var(--white); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+    /* ── NAV ── */
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 18px 48px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: rgba(10,10,10,0.95); backdrop-filter: blur(12px); z-index: 50; }
+    .nav-logo svg { width: 90px; height: auto; }
+    .nav-logo svg polygon, .nav-logo svg path { fill: var(--white); }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .nav-user { font-size: 13px; color: var(--gray-2); }
+    .btn-logout { font-family: var(--font); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: transparent; color: var(--gray-2); border: 1px solid var(--border); padding: 7px 14px; border-radius: 4px; cursor: pointer; transition: color 0.2s; }
+    .btn-logout:hover { color: var(--white); }
+    .btn-home { font-family: var(--font); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: var(--white); color: var(--bg); border: none; padding: 7px 14px; border-radius: 4px; cursor: pointer; text-decoration: none; }
+
+    /* ── LAYOUT ── */
+    .layout { display: grid; grid-template-columns: 240px 1fr; min-height: calc(100vh - 61px); }
+
+    /* ── SIDEBAR ── */
+    .sidebar { border-right: 1px solid var(--border); padding: 32px 20px; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 61px; height: calc(100vh - 61px); }
+    .sidebar-section { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gray-3); padding: 0 12px; margin: 16px 0 6px; }
+    .sidebar-section:first-child { margin-top: 0; }
+    .tab-btn { font-family: var(--font); font-size: 13px; font-weight: 700; color: var(--gray-2); background: none; border: none; padding: 10px 12px; border-radius: 4px; cursor: pointer; text-align: left; width: 100%; display: flex; align-items: center; gap: 10px; transition: background 0.15s, color 0.15s; }
+    .tab-btn:hover { background: var(--bg-3); color: var(--white); }
+    .tab-btn.active { background: var(--bg-3); color: var(--white); }
+    .tab-btn svg { width: 15px; height: 15px; flex-shrink: 0; opacity: 0.5; }
+    .tab-btn.active svg { opacity: 1; }
+    .sidebar-divider { height: 1px; background: var(--border); margin: 8px 12px; }
+
+    /* ── CONTENT ── */
+    .content { padding: 48px; max-width: 900px; }
+    .tab-view { display: none; }
+    .tab-view.active { display: block; }
+
+    /* ── COMMON ── */
+    .section-label { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gray-3); margin-bottom: 20px; }
+    .page-title { font-size: 32px; font-weight: 900; letter-spacing: -0.025em; margin-bottom: 6px; }
+    .page-sub { font-size: 15px; color: var(--gray-2); margin-bottom: 40px; }
+    label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray-3); display: block; margin-bottom: 6px; }
+    input, textarea, select { font-family: var(--font); font-size: 14px; width: 100%; background: var(--bg-2); border: 1px solid var(--border); color: var(--white); padding: 10px 14px; border-radius: 4px; outline: none; transition: border-color 0.2s; }
+    textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+    input:focus, textarea:focus, select:focus { border-color: rgba(255,255,255,0.3); }
+    input::placeholder, textarea::placeholder { color: var(--gray-3); }
+    select option { background: var(--bg-3); }
+    input:disabled { opacity: 0.4; cursor: not-allowed; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    .btn-primary { font-family: var(--font); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: var(--white); color: var(--bg); border: none; padding: 11px 22px; border-radius: 4px; cursor: pointer; transition: opacity 0.2s; text-decoration: none; display: inline-block; }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-secondary { font-family: var(--font); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: transparent; color: var(--gray-2); border: 1px solid var(--border); padding: 11px 22px; border-radius: 4px; cursor: pointer; transition: color 0.2s; }
+    .btn-secondary:hover { color: var(--white); }
+    .msg { font-size: 13px; margin-top: 12px; display: none; }
+    .msg.success { color: #4ade80; display: block; }
+    .msg.error { color: #ff6b6b; display: block; }
+
+    /* ── PROFILO ── */
+    .profile-header { display: flex; gap: 28px; align-items: flex-start; padding-bottom: 40px; border-bottom: 1px solid var(--border); margin-bottom: 40px; }
+    .avatar-wrap { position: relative; flex-shrink: 0; }
+    .avatar { width: 88px; height: 88px; border-radius: 50%; background: var(--bg-3); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 900; color: var(--gray-3); overflow: hidden; }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-edit { position: absolute; bottom: 0; right: 0; width: 26px; height: 26px; border-radius: 50%; background: var(--white); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .avatar-edit svg { width: 12px; height: 12px; }
+    .profile-meta h2 { font-size: 24px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 4px; }
+    .profile-meta p { font-size: 14px; color: var(--gray-2); }
+
+    /* PRIVACY TOGGLE */
+    .privacy-bar { display: flex; align-items: center; justify-content: space-between; background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; padding: 14px 18px; margin-bottom: 36px; }
+    .privacy-bar h4 { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+    .privacy-bar p { font-size: 12px; color: var(--gray-2); }
+    .toggle { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; inset: 0; background: var(--gray-3); border-radius: 22px; cursor: pointer; transition: background 0.2s; }
+    .toggle-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: transform 0.2s; }
+    .toggle input:checked + .toggle-slider { background: #4ade80; }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+    /* SKILLS */
+    .skills-wrap { display: flex; flex-wrap: wrap; gap: 8px; background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; padding: 8px 12px; min-height: 44px; align-items: center; cursor: text; }
+    .skill-tag { font-size: 11px; font-weight: 700; background: var(--bg-3); border: 1px solid var(--border); color: var(--gray-1); padding: 3px 8px; border-radius: 2px; display: flex; align-items: center; gap: 5px; }
+    .skill-tag button { background: none; border: none; color: var(--gray-3); cursor: pointer; font-size: 13px; padding: 0; line-height: 1; }
+    .skill-tag button:hover { color: var(--white); }
+    .skill-input-field { background: none; border: none; outline: none; color: var(--white); font-family: var(--font); font-size: 13px; flex: 1; min-width: 120px; padding: 2px 4px; }
+
+    /* SAVE BAR */
+    .save-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-2); border-top: 1px solid var(--border); padding: 14px 48px; display: flex; align-items: center; justify-content: space-between; z-index: 40; transform: translateY(100%); transition: transform 0.3s; }
+    .save-bar.visible { transform: translateY(0); }
+    .save-bar p { font-size: 13px; color: var(--gray-2); }
+    .save-bar-actions { display: flex; gap: 10px; }
+
+    /* PORTFOLIO */
+    .portfolio-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; }
+    .portfolio-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+    .portfolio-img { width: 100%; aspect-ratio: 16/9; background: var(--bg-3); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--gray-3); }
+    .portfolio-body { padding: 14px; }
+    .portfolio-body h4 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .portfolio-body p { font-size: 12px; color: var(--gray-2); line-height: 1.5; margin-bottom: 8px; }
+    .portfolio-body a { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--gray-2); text-decoration: none; }
+    .portfolio-body a:hover { color: var(--white); }
+    .add-portfolio-btn { border: 1px dashed var(--border); border-radius: 4px; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; color: var(--gray-3); background: none; width: 100%; font-family: var(--font); transition: border-color 0.2s, color 0.2s; }
+    .add-portfolio-btn:hover { border-color: var(--border-h); color: var(--gray-2); }
+
+    /* ── COMMUNITY ── */
+    .community-filters { display: flex; gap: 10px; margin-bottom: 28px; flex-wrap: wrap; }
+    .search-wrap { flex: 1; min-width: 180px; position: relative; }
+    .search-wrap input { padding-left: 36px; }
+    .search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--gray-3); pointer-events: none; }
+    .filter-select { font-family: var(--font); font-size: 13px; background: var(--bg-2); border: 1px solid var(--border); color: var(--gray-2); padding: 10px 14px; border-radius: 4px; outline: none; cursor: pointer; width: auto; }
+    .members-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+    .member-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; padding: 20px; cursor: pointer; transition: border-color 0.2s, transform 0.15s; }
+    .member-card:hover { border-color: var(--border-h); transform: translateY(-2px); }
+    .card-top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .m-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--bg-3); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; color: var(--gray-2); flex-shrink: 0; overflow: hidden; }
+    .m-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .m-name { font-size: 15px; font-weight: 900; letter-spacing: -0.01em; margin-bottom: 2px; }
+    .m-role { font-size: 12px; color: var(--gray-2); }
+    .m-bio { font-size: 12px; color: var(--gray-2); line-height: 1.6; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .m-skills { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
+    .skill-chip { font-size: 10px; font-weight: 700; color: var(--gray-2); background: var(--bg-3); border: 1px solid var(--border); padding: 2px 7px; border-radius: 2px; }
+    .card-footer { display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 12px; }
+    .m-sector { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray-3); }
+    .m-location { font-size: 11px; color: var(--gray-3); }
+    .results-info { font-size: 12px; color: var(--gray-3); margin-bottom: 20px; }
+
+    /* ── BIGLIETTI ── */
+    .tickets-list { display: flex; flex-direction: column; gap: 12px; }
+    .ticket-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .ticket-card.confirmed { border-color: rgba(255,255,255,0.18); }
+    .ticket-info h3 { font-size: 17px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 5px; }
+    .ticket-meta { font-size: 12px; color: var(--gray-2); display: flex; gap: 14px; flex-wrap: wrap; }
+    .ticket-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+    .badge { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 2px; }
+    .badge.confirmed { background: rgba(50,200,100,0.15); color: #4ade80; }
+    .badge.pending { background: rgba(250,180,50,0.15); color: #fbbf24; }
+    .badge.cancelled { background: rgba(220,50,50,0.15); color: #ff6b6b; }
+    .badge.early-bird { background: rgba(255,255,255,0.08); color: var(--gray-1); }
+    .badge.standard { background: rgba(255,255,255,0.05); color: var(--gray-2); }
+    .ticket-price { font-size: 15px; font-weight: 700; }
+    .ticket-qr { font-size: 10px; color: var(--gray-3); font-family: monospace; }
+    .empty-state { text-align: center; padding: 60px 24px; border: 1px dashed var(--border); border-radius: 4px; }
+    .empty-state p { font-size: 15px; color: var(--gray-2); margin-bottom: 20px; }
+
+    /* ── MODAL ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal { background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; width: 100%; max-width: 520px; max-height: 88vh; overflow-y: auto; position: relative; }
+    .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--gray-2); font-size: 20px; cursor: pointer; line-height: 1; z-index: 2; }
+    .modal-header { padding: 28px 28px 0; display: flex; gap: 18px; align-items: flex-start; }
+    .modal-avatar { width: 64px; height: 64px; border-radius: 50%; background: var(--bg-3); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; color: var(--gray-2); flex-shrink: 0; overflow: hidden; }
+    .modal-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .modal-name { font-size: 20px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 3px; }
+    .modal-role { font-size: 13px; color: var(--gray-2); margin-bottom: 10px; }
+    .modal-links { display: flex; gap: 8px; flex-wrap: wrap; }
+    .modal-link { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gray-2); text-decoration: none; border: 1px solid var(--border); padding: 4px 9px; border-radius: 3px; transition: color 0.2s; }
+    .modal-link:hover { color: var(--white); }
+    .modal-body { padding: 20px 28px 28px; }
+    .modal-section { margin-bottom: 20px; }
+    .modal-section-title { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gray-3); margin-bottom: 8px; }
+    .modal-bio { font-size: 14px; color: var(--gray-1); line-height: 1.75; }
+    .modal-skills { display: flex; flex-wrap: wrap; gap: 7px; }
+    .modal-skill { font-size: 11px; font-weight: 700; color: var(--gray-2); background: var(--bg-3); border: 1px solid var(--border); padding: 3px 9px; border-radius: 2px; }
+    .contact-form { display: flex; flex-direction: column; gap: 10px; }
+    .contact-form input, .contact-form textarea { font-family: var(--font); font-size: 13px; background: var(--bg-3); border: 1px solid var(--border); color: var(--white); padding: 9px 12px; border-radius: 4px; outline: none; width: 100%; }
+    .contact-form textarea { min-height: 72px; resize: vertical; line-height: 1.6; }
+    .contact-form input::placeholder, .contact-form textarea::placeholder { color: var(--gray-3); }
+    .contact-form input:focus, .contact-form textarea:focus { border-color: rgba(255,255,255,0.3); }
+
+    /* MODAL PORTFOLIO */
+    .p-modal { background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; width: 100%; max-width: 440px; padding: 28px; position: relative; }
+    .p-modal h3 { font-size: 18px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 20px; }
+    .p-modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; height: auto; flex-direction: row; overflow-x: auto; padding: 12px 20px; border-right: none; border-bottom: 1px solid var(--border); gap: 4px; }
+      .sidebar-section { display: none; }
+      .sidebar-divider { display: none; }
+      .tab-btn { white-space: nowrap; }
+      .content { padding: 28px 20px; }
+      nav { padding: 16px 20px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .portfolio-grid { grid-template-columns: 1fr 1fr; }
+      .save-bar { padding: 14px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="nav-logo">
+      <svg viewBox="0 0 629.36 216.06" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="526.76 203.06 527.86 201.96 527.86 131.95 582.65 202.02 583.69 203.06 600.13 203.06 601.17 202.02 601.17 101.52 600.07 100.42 584.68 100.42 583.58 101.52 583.58 171.53 527.63 101.51 526.53 100.42 511.37 100.42 510.27 101.52 510.27 202.02 511.31 203.06 526.76 203.06"/>
+        <polygon points="210.94 115.99 251.12 64.16 212.05 13 233.95 13 262.17 49.9 290.76 13 312.69 13 273.32 64.5 312.68 115.99 290.76 115.99 262.37 78.84 233.97 115.99 210.94 115.99"/>
+        <polygon points="498.96 186.23 484.97 203.05 429.99 203.05 428.89 201.95 428.89 101.16 429.99 100.06 493.77 100.06 494.87 101.16 494.87 117.28 493.77 118.38 447.22 118.38 447.22 142.94 484.24 142.94 485.34 144.04 485.34 160.17 484.24 161.27 447.22 161.27 447.22 184.73 498.17 184.73 498.96 186.23"/>
+        <path d="M369.15,57.72v-26.2h33.36l-15.03-18.33h-64.51l-1.1,1.1v16.13l1.1,1.1h27.49v68.18c-21.85,4.27-37.9,23.65-40.32,45.45H14.66V0H0v159.07h310.86c10.92,71.81,113.25,53.99,103.37-16.86h-36.29l-12.1,18.33h29.32c-6.78,27.96-40.54,38.19-59.25,14.17-27.88-35.78,20.13-81.84,52.91-47.22l10.45-13.09c-6.83-9.84-19.12-13.28-30.14-15.93v-26.82h245.56v144.42h14.66V57.72h-260.22Z"/>
+        <polygon points="205.79 99.18 191.8 116 136.82 116 135.72 114.9 135.72 14.11 136.82 13.01 200.6 13.01 201.7 14.11 201.7 30.23 200.6 31.33 154.05 31.33 154.05 55.89 191.07 55.89 192.17 56.99 192.17 73.12 191.07 74.22 154.05 74.22 154.05 97.68 205 97.68 205.79 99.18"/>
+        <polygon points="44.75 116 45.85 114.89 45.85 44.64 100.83 114.95 101.87 116 118.37 116 120.41 114.95 120.41 14.11 118.31 13.01 102.86 13.01 101.76 14.11 101.76 84.36 45.62 14.1 44.51 13.01 29.3 13.01 28.19 14.11 28.19 114.95 29.24 116 44.75 116"/>
+      </svg>
+    </a>
+    <div class="nav-right">
+      <span class="nav-user" id="nav-email"></span>
+      <a href="index.html" class="btn-home">Home</a>
+      <button class="btn-logout" onclick="handleLogout()">Esci</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-section">Account</div>
+      <button class="tab-btn active" onclick="switchTab('profilo', this)">
+        <svg viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="5" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M2 13c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Il mio profilo
+      </button>
+      <button class="tab-btn" onclick="switchTab('biglietti', this)">
+        <svg viewBox="0 0 15 15" fill="none"><rect x="1.5" y="4.5" width="12" height="8" rx="1" stroke="currentColor" stroke-width="1.3"/><path d="M5 4.5V3.5a2.5 2.5 0 015 0v1" stroke="currentColor" stroke-width="1.3"/></svg>
+        Biglietti
+      </button>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section">Community</div>
+      <button class="tab-btn" onclick="switchTab('community', this)">
+        <svg viewBox="0 0 15 15" fill="none"><circle cx="5" cy="5.5" r="2" stroke="currentColor" stroke-width="1.3"/><circle cx="10" cy="5.5" r="2" stroke="currentColor" stroke-width="1.3"/><path d="M1 13c0-2.5 1.8-4 4-4s4 1.5 4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M10 9.5c1.5 0 4 .8 4 3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Community
+      </button>
+    </aside>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- ── TAB PROFILO ── -->
+      <div class="tab-view active" id="tab-profilo">
+        <div class="page-title">Il mio profilo</div>
+        <p class="page-sub">Come ti vedono gli altri membri della community.</p>
+
+        <!-- HEADER AVATAR -->
+        <div class="profile-header">
+          <div class="avatar-wrap">
+            <div class="avatar" id="avatar-el">
+              <span id="avatar-initials">?</span>
+            </div>
+            <button class="avatar-edit" onclick="document.getElementById('avatar-input').click()">
+              <svg viewBox="0 0 12 12" fill="none"><path d="M8 1.5L10.5 4M1.5 9.5V11H3L10 4L7.5 1.5L1.5 9.5Z" stroke="#000" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <input type="file" id="avatar-input" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
+          </div>
+          <div class="profile-meta">
+            <h2 id="ph-name">—</h2>
+            <p id="ph-role">—</p>
+          </div>
+        </div>
+
+        <!-- PRIVACY -->
+        <div class="privacy-bar">
+          <div>
+            <h4>Visibile nella community</h4>
+            <p>Se attivo, appari nella directory e altri possono contattarti.</p>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="privacy-toggle" onchange="updatePrivacy(this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <!-- FORM -->
+        <div class="form-grid" style="margin-bottom:32px;">
+          <div class="form-group"><label>Nome completo</label><input type="text" id="f-name" oninput="markDirty()"></div>
+          <div class="form-group"><label>Ruolo</label><input type="text" id="f-role" placeholder="Founder, Designer..." oninput="markDirty()"></div>
+          <div class="form-group"><label>Azienda</label><input type="text" id="f-company" oninput="markDirty()"></div>
+          <div class="form-group"><label>Settore</label>
+            <select id="f-sector" onchange="markDirty()">
+              <option value="">Seleziona...</option>
+              <option>Tech & Software</option><option>Marketing & Comunicazione</option>
+              <option>Design & Creatività</option><option>Finance & Consulenza</option>
+              <option>Manifattura & Produzione</option><option>Retail & E-commerce</option>
+              <option>Salute & Benessere</option><option>Educazione & Formazione</option>
+              <option>Immobiliare</option><option>Hospitality & Food</option>
+              <option>Legale</option><option>Altro</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Città</label><input type="text" id="f-location" oninput="markDirty()"></div>
+          <div class="form-group"><label>Sito web</label><input type="url" id="f-website" placeholder="https://" oninput="markDirty()"></div>
+          <div class="form-group"><label>LinkedIn</label><input type="url" id="f-linkedin" placeholder="https://linkedin.com/in/..." oninput="markDirty()"></div>
+          <div class="form-group"><label>Telefono</label><input type="tel" id="f-phone" placeholder="+39 333 1234567" oninput="markDirty()"></div>
+          <div class="form-group full"><label>Bio</label><textarea id="f-bio" placeholder="Racconta chi sei e cosa fai..." oninput="markDirty()"></textarea></div>
+          <div class="form-group full">
+            <label>Skills</label>
+            <div class="skills-wrap" id="skills-wrap" onclick="document.getElementById('skill-input').focus()">
+              <input class="skill-input-field" id="skill-input" placeholder="Aggiungi skill e premi Invio..." onkeydown="handleSkill(event)">
+            </div>
+          </div>
+        </div>
+
+        <!-- PORTFOLIO -->
+        <div class="section-label">Portfolio & Progetti</div>
+        <div class="portfolio-grid" id="portfolio-grid">
+          <button class="add-portfolio-btn" onclick="openPortfolioModal()">+ Aggiungi</button>
+        </div>
+
+        <div class="msg" id="profile-msg"></div>
+      </div>
+
+      <!-- ── TAB BIGLIETTI ── -->
+      <div class="tab-view" id="tab-biglietti">
+        <div class="page-title">I miei biglietti</div>
+        <p class="page-sub">Storico acquisti e prossimi eventi.</p>
+        <div id="tickets-container">
+          <div style="color:var(--gray-3);font-size:14px;padding:20px 0;">Caricamento...</div>
+        </div>
+      </div>
+
+      <!-- ── TAB COMMUNITY ── -->
+      <div class="tab-view" id="tab-community">
+        <div class="page-title">Community</div>
+        <p class="page-sub" id="community-count">Caricamento...</p>
+        <div class="community-filters">
+          <div class="search-wrap">
+            <span class="search-icon"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="5.5" cy="5.5" r="4" stroke="currentColor" stroke-width="1.3"/><path d="M9 9L11.5 11.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></span>
+            <input type="text" id="community-search" placeholder="Cerca nome, azienda, skill..." oninput="filterCommunity()">
+          </div>
+          <select class="filter-select" id="sector-filter" onchange="filterCommunity()">
+            <option value="">Tutti i settori</option>
+            <option>Tech & Software</option><option>Marketing & Comunicazione</option>
+            <option>Design & Creatività</option><option>Finance & Consulenza</option>
+            <option>Manifattura & Produzione</option><option>Retail & E-commerce</option>
+            <option>Salute & Benessere</option><option>Educazione & Formazione</option>
+            <option>Immobiliare</option><option>Hospitality & Food</option>
+            <option>Legale</option><option>Altro</option>
+          </select>
+        </div>
+        <div class="results-info" id="results-info"></div>
+        <div class="members-grid" id="members-grid">
+          <div style="color:var(--gray-3);font-size:14px;">Caricamento...</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SAVE BAR -->
+  <div class="save-bar" id="save-bar">
+    <p>Modifiche non salvate</p>
+    <div class="save-bar-actions">
+      <button class="btn-secondary" onclick="cancelChanges()">Annulla</button>
+      <button class="btn-primary" onclick="saveProfile()">Salva profilo</button>
+    </div>
+  </div>
+
+  <!-- MODAL MEMBRO -->
+  <div class="modal-overlay" id="member-modal" onclick="closeModalIfOutside(event)">
+    <div class="modal">
+      <button class="modal-close" onclick="closeMemberModal()">×</button>
+      <div class="modal-header" id="modal-header"></div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- MODAL PORTFOLIO -->
+  <div class="modal-overlay" id="portfolio-modal" onclick="closeModalIfOutside(event)">
+    <div class="p-modal">
+      <button class="modal-close" onclick="closePortfolioModal()">×</button>
+      <h3>Aggiungi progetto</h3>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div class="form-group"><label>Titolo</label><input type="text" id="p-title" placeholder="Nome del progetto"></div>
+        <div class="form-group"><label>Descrizione</label><textarea id="p-desc" placeholder="Descrizione breve..." style="min-height:64px;"></textarea></div>
+        <div class="form-group"><label>URL</label><input type="url" id="p-url" placeholder="https://..."></div>
+      </div>
+      <div class="p-modal-actions">
+        <button class="btn-primary" onclick="savePortfolio()">Salva</button>
+        <button class="btn-secondary" onclick="closePortfolioModal()">Annulla</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SB_URL = 'https://gafmqwiympfzervppqvi.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhZm1xd2l5bXBmemVydnBwcXZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MTQ1NTIsImV4cCI6MjA5MTk5MDU1Mn0.7xDiXBLf_Zf85hNP0Zq1nQXsX0Vz7dRkE8XROafRpII';
+    const { createClient } = supabase;
+    const sb = createClient(SB_URL, SB_KEY);
+
+    let currentUser = null;
+    let skills = [];
+    let isDirty = false;
+    let allMembers = [];
+
+    async function init() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) return window.location.href = 'login.html';
+      currentUser = session.user;
+      document.getElementById('nav-email').textContent = currentUser.email;
+
+      // success banner da Stripe
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('success')) {
+        switchTab('biglietti', document.querySelectorAll('.tab-btn')[1]);
+        window.history.replaceState({}, '', '/area.html');
+      }
+
+      await loadProfile();
+      await loadPortfolio();
+    }
+
+    // ── TABS ──
+    function switchTab(name, btn) {
+      document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + name).classList.add('active');
+      btn.classList.add('active');
+      if (name === 'biglietti') loadTickets();
+      if (name === 'community') loadCommunity();
+    }
+
+    // ── PROFILO ──
+    async function loadProfile() {
+      const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+      if (!data) return;
+      document.getElementById('f-name').value = data.full_name || '';
+      document.getElementById('f-role').value = data.role || '';
+      document.getElementById('f-company').value = data.company || '';
+      document.getElementById('f-sector').value = data.sector || '';
+      document.getElementById('f-location').value = data.location || '';
+      document.getElementById('f-website').value = data.website || '';
+      document.getElementById('f-linkedin').value = data.linkedin || '';
+      document.getElementById('f-phone').value = data.phone || '';
+      document.getElementById('f-bio').value = data.bio || '';
+      document.getElementById('privacy-toggle').checked = data.is_public ?? true;
+      skills = data.skills || [];
+      renderSkills();
+      updateProfileHeader(data);
+      if (data.avatar_url) setAvatar(data.avatar_url);
+      else setInitials(data.full_name);
+    }
+
+    function updateProfileHeader(d) {
+      document.getElementById('ph-name').textContent = d.full_name || '—';
+      document.getElementById('ph-role').textContent = [d.role, d.company].filter(Boolean).join(' @ ') || '—';
+    }
+
+    function setAvatar(url) {
+      const el = document.getElementById('avatar-el');
+      el.innerHTML = `<img src="${url}" alt="">`;
+    }
+
+    function setInitials(name) {
+      const i = (name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      document.getElementById('avatar-initials').textContent = i;
+    }
+
+    function markDirty() {
+      if (!isDirty) { isDirty = true; document.getElementById('save-bar').classList.add('visible'); }
+    }
+
+    function cancelChanges() {
+      isDirty = false;
+      document.getElementById('save-bar').classList.remove('visible');
+      loadProfile();
+    }
+
+    async function saveProfile() {
+      const updates = {
+        full_name: document.getElementById('f-name').value,
+        role: document.getElementById('f-role').value,
+        company: document.getElementById('f-company').value,
+        sector: document.getElementById('f-sector').value,
+        location: document.getElementById('f-location').value,
+        website: document.getElementById('f-website').value,
+        linkedin: document.getElementById('f-linkedin').value,
+        phone: document.getElementById('f-phone').value,
+        bio: document.getElementById('f-bio').value,
+        skills, updated_at: new Date().toISOString()
+      };
+      const { error } = await sb.from('profiles').update(updates).eq('id', currentUser.id);
+      if (error) return showMsg('profile-msg', 'Errore: ' + error.message, 'error');
+      updateProfileHeader(updates);
+      isDirty = false;
+      document.getElementById('save-bar').classList.remove('visible');
+      showMsg('profile-msg', 'Profilo salvato.', 'success');
+    }
+
+    async function updatePrivacy(val) {
+      await sb.from('profiles').update({ is_public: val }).eq('id', currentUser.id);
+    }
+
+    async function uploadAvatar(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const path = `avatars/${currentUser.id}.${file.name.split('.').pop()}`;
+      await sb.storage.from('profiles').upload(path, file, { upsert: true });
+      const { data } = sb.storage.from('profiles').getPublicUrl(path);
+      await sb.from('profiles').update({ avatar_url: data.publicUrl }).eq('id', currentUser.id);
+      setAvatar(data.publicUrl);
+    }
+
+    // SKILLS
+    function renderSkills() {
+      const wrap = document.getElementById('skills-wrap');
+      const input = document.getElementById('skill-input');
+      wrap.querySelectorAll('.skill-tag').forEach(t => t.remove());
+      skills.forEach((s, i) => {
+        const tag = document.createElement('span');
+        tag.className = 'skill-tag';
+        tag.innerHTML = `${s}<button onclick="removeSkill(${i})">×</button>`;
+        wrap.insertBefore(tag, input);
+      });
+    }
+    function handleSkill(e) {
+      if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault();
+        const val = e.target.value.trim();
+        if (val && !skills.includes(val)) { skills.push(val); renderSkills(); markDirty(); }
+        e.target.value = '';
+      }
+    }
+    function removeSkill(i) { skills.splice(i, 1); renderSkills(); markDirty(); }
+
+    // PORTFOLIO
+    async function loadPortfolio() {
+      const { data } = await sb.from('portfolio').select('*').eq('user_id', currentUser.id).order('created_at');
+      const grid = document.getElementById('portfolio-grid');
+      grid.innerHTML = '';
+      (data || []).forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'portfolio-card';
+        card.innerHTML = `<div class="portfolio-img">Progetto</div><div class="portfolio-body"><h4>${item.title}</h4><p>${item.description || ''}</p>${item.url ? `<a href="${item.url}" target="_blank">Vedi →</a>` : ''}</div>`;
+        grid.appendChild(card);
+      });
+      const addBtn = document.createElement('button');
+      addBtn.className = 'add-portfolio-btn';
+      addBtn.textContent = '+ Aggiungi';
+      addBtn.onclick = openPortfolioModal;
+      grid.appendChild(addBtn);
+    }
+
+    function openPortfolioModal() { document.getElementById('portfolio-modal').classList.add('open'); }
+    function closePortfolioModal() { document.getElementById('portfolio-modal').classList.remove('open'); }
+
+    async function savePortfolio() {
+      const title = document.getElementById('p-title').value;
+      if (!title) return;
+      await sb.from('portfolio').insert({ user_id: currentUser.id, title, description: document.getElementById('p-desc').value, url: document.getElementById('p-url').value });
+      closePortfolioModal();
+      loadPortfolio();
+    }
+
+    // ── BIGLIETTI ──
+    async function loadTickets() {
+      const { data } = await sb.from('tickets').select('*, events(title, event_date, location)').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+      const container = document.getElementById('tickets-container');
+      if (!data?.length) {
+        container.innerHTML = `<div class="empty-state"><p>Non hai ancora nessun biglietto.</p><a href="index.html#events" class="btn-primary">Scopri gli eventi</a></div>`;
+        return;
+      }
+      container.innerHTML = `<div class="tickets-list">${data.map(t => {
+        const ev = t.events;
+        const date = ev ? new Date(ev.event_date).toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '—';
+        const price = (t.price_paid / 100).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
+        return `<div class="ticket-card ${t.status}">
+          <div class="ticket-info"><h3>${ev?.title || 'Evento'}</h3><div class="ticket-meta"><span>${date}</span><span>${ev?.location || ''}</span></div></div>
+          <div class="ticket-right">
+            <span class="badge ${t.status}">${t.status === 'confirmed' ? 'Confermato' : t.status === 'pending' ? 'In attesa' : 'Annullato'}</span>
+            <span class="badge ${t.ticket_type === 'early_bird' ? 'early-bird' : 'standard'}">${t.ticket_type === 'early_bird' ? 'Early Bird' : 'Standard'}</span>
+            <span class="ticket-price">${price}</span>
+            <span class="ticket-qr">#${t.qr_code?.slice(0, 8).toUpperCase()}</span>
+          </div>
+        </div>`;
+      }).join('')}</div>`;
+    }
+
+    // ── COMMUNITY ──
+    async function loadCommunity() {
+      if (allMembers.length) return;
+      const { data } = await sb.from('community_directory').select('*').order('created_at', { ascending: false });
+      allMembers = data || [];
+      document.getElementById('community-count').textContent = `${allMembers.length} membro${allMembers.length !== 1 ? 'i' : ''} nella community`;
+      renderMembers(allMembers);
+    }
+
+    function filterCommunity() {
+      const q = document.getElementById('community-search').value.toLowerCase();
+      const sector = document.getElementById('sector-filter').value;
+      const filtered = allMembers.filter(m =>
+        (!q || [m.full_name, m.company, m.role, ...(m.skills || [])].some(v => (v || '').toLowerCase().includes(q))) &&
+        (!sector || m.sector === sector)
+      );
+      renderMembers(filtered);
+    }
+
+    function renderMembers(members) {
+      document.getElementById('results-info').textContent = members.length + ' risultati';
+      const grid = document.getElementById('members-grid');
+      if (!members.length) { grid.innerHTML = '<div style="color:var(--gray-3);font-size:14px;padding:32px 0;">Nessun membro trovato.</div>'; return; }
+      grid.innerHTML = members.map(m => {
+        const initials = (m.full_name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+        const avatar = m.avatar_url ? `<img src="${m.avatar_url}" alt="">` : initials;
+        const role = [m.role, m.company].filter(Boolean).join(' @ ');
+        const skillsHtml = (m.skills || []).slice(0, 3).map(s => `<span class="skill-chip">${s}</span>`).join('');
+        return `<div class="member-card" onclick="openMember('${m.id}')">
+          <div class="card-top"><div class="m-avatar">${avatar}</div><div><div class="m-name">${m.full_name || '—'}</div><div class="m-role">${role || '—'}</div></div></div>
+          ${m.bio ? `<div class="m-bio">${m.bio}</div>` : ''}
+          ${skillsHtml ? `<div class="m-skills">${skillsHtml}</div>` : ''}
+          <div class="card-footer"><span class="m-sector">${m.sector || ''}</span><span class="m-location">${m.location || ''}</span></div>
+        </div>`;
+      }).join('');
+    }
+
+    async function openMember(id) {
+      const { data: m } = await sb.from('community_directory').select('*').eq('id', id).single();
+      if (!m) return;
+      const initials = (m.full_name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      const avatar = m.avatar_url ? `<img src="${m.avatar_url}" alt="">` : initials;
+      const role = [m.role, m.company].filter(Boolean).join(' @ ');
+      const links = [m.website && `<a href="${m.website}" target="_blank" class="modal-link">Sito web</a>`, m.linkedin && `<a href="${m.linkedin}" target="_blank" class="modal-link">LinkedIn</a>`].filter(Boolean).join('');
+      document.getElementById('modal-header').innerHTML = `<div class="modal-avatar">${avatar}</div><div><div class="modal-name">${m.full_name || '—'}</div><div class="modal-role">${role || '—'}${m.location ? ' · ' + m.location : ''}</div><div class="modal-links">${links}</div></div>`;
+      const skillsHtml = (m.skills || []).map(s => `<span class="modal-skill">${s}</span>`).join('');
+      document.getElementById('modal-body').innerHTML = `
+        ${m.bio ? `<div class="modal-section"><div class="modal-section-title">Bio</div><div class="modal-bio">${m.bio}</div></div>` : ''}
+        ${skillsHtml ? `<div class="modal-section"><div class="modal-section-title">Skills</div><div class="modal-skills">${skillsHtml}</div></div>` : ''}
+        <div class="modal-section"><div class="modal-section-title">Contatta ${m.full_name?.split(' ')[0] || 'questo membro'}</div>
+          <div class="contact-form">
+            <input type="text" id="c-name" placeholder="Il tuo nome">
+            <input type="email" id="c-email" placeholder="La tua email">
+            <textarea id="c-msg" placeholder="Scrivi un messaggio..."></textarea>
+            <button class="btn-primary" onclick="sendMsg('${id}')">Invia messaggio</button>
+            <div class="msg" id="contact-msg"></div>
+          </div>
+        </div>`;
+      document.getElementById('member-modal').classList.add('open');
+    }
+
+    async function sendMsg(recipientId) {
+      const name = document.getElementById('c-name').value;
+      const email = document.getElementById('c-email').value;
+      const message = document.getElementById('c-msg').value;
+      if (!name || !email || !message) return showMsg('contact-msg', 'Compila tutti i campi.', 'error');
+      const { error } = await sb.from('messages').insert({ recipient_id: recipientId, sender_name: name, sender_email: email, message });
+      if (error) return showMsg('contact-msg', 'Errore. Riprova.', 'error');
+      showMsg('contact-msg', 'Messaggio inviato!', 'success');
+      document.getElementById('c-name').value = '';
+      document.getElementById('c-email').value = '';
+      document.getElementById('c-msg').value = '';
+    }
+
+    function closeMemberModal() { document.getElementById('member-modal').classList.remove('open'); }
+    function closeModalIfOutside(e) { if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('open'); }
+
+    function showMsg(id, text, type) {
+      const el = document.getElementById(id);
+      el.textContent = text; el.className = 'msg ' + type;
+      setTimeout(() => el.className = 'msg', 3000);
+    }
+
+    async function handleLogout() {
+      await sb.auth.signOut();
+      window.location.href = 'index.html';
+    }
+
+    init();
+  </script>
+</body>
+</html>
