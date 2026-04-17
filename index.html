@@ -648,7 +648,7 @@
       const sb = supabase.createClient("https://gafmqwiympfzervppqvi.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhZm1xd2l5bXBmemVydnBwcXZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MTQ1NTIsImV4cCI6MjA5MTk5MDU1Mn0.7xDiXBLf_Zf85hNP0Zq1nQXsX0Vz7dRkE8XROafRpII");
       sb.auth.getSession().then(({ data }) => {
         const btn = document.getElementById("nav-area-btn");
-        if (data.session) { btn.href = "dashboard.html"; btn.textContent = "La mia area"; }
+        if (data.session) { btn.href = "area.html"; btn.textContent = "La mia area"; }
       });
     })();
   </script>
