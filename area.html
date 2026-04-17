@@ -236,6 +236,12 @@
         <svg viewBox="0 0 15 15" fill="none"><circle cx="5" cy="5.5" r="2" stroke="currentColor" stroke-width="1.3"/><circle cx="10" cy="5.5" r="2" stroke="currentColor" stroke-width="1.3"/><path d="M1 13c0-2.5 1.8-4 4-4s4 1.5 4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M10 9.5c1.5 0 4 .8 4 3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
         Community
       </button>
+      <div class="sidebar-divider" id="admin-divider" style="display:none;"></div>
+      <div class="sidebar-section" id="admin-section-label" style="display:none;">Admin</div>
+      <button class="tab-btn" id="admin-tab-btn" onclick="switchTab('admin', this)" style="display:none;">
+        <svg viewBox="0 0 15 15" fill="none"><rect x="2" y="2" width="11" height="11" rx="1" stroke="currentColor" stroke-width="1.3"/><path d="M5 7.5h5M7.5 5v5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Gestione eventi
+      </button>
     </aside>
 
     <!-- CONTENT -->
@@ -347,8 +353,51 @@
         </div>
       </div>
 
-    </div>
-  </div>
+      <!-- ── TAB ADMIN ── -->
+      <div class="tab-view" id="tab-admin">
+        <div class="page-title">Gestione eventi</div>
+        <p class="page-sub">Crea, modifica e pubblica gli eventi NextGen.</p>
+
+        <!-- FORM CREA EVENTO -->
+        <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:4px;padding:32px;margin-bottom:40px;">
+          <div class="section-label" style="margin-bottom:24px;">Crea nuovo evento</div>
+          <div class="form-grid">
+            <div class="form-group full"><label>Titolo</label><input type="text" id="ev-title" placeholder="NextGen Meetup #3"></div>
+            <div class="form-group full"><label>Descrizione</label><textarea id="ev-desc" placeholder="Di cosa si tratta..."></textarea></div>
+            <div class="form-group"><label>Data e ora</label><input type="datetime-local" id="ev-date"></div>
+            <div class="form-group"><label>Location</label><input type="text" id="ev-location" placeholder="Castelli in Aria, Castelfranco Veneto"></div>
+            <div class="form-group"><label>Prezzo early bird (€)</label><input type="number" id="ev-price-eb" placeholder="18" value="18" min="0" step="0.5"></div>
+            <div class="form-group"><label>Prezzo standard (€)</label><input type="number" id="ev-price-std" placeholder="20" value="20" min="0" step="0.5"></div>
+            <div class="form-group"><label>Prezzo in sede (€)</label><input type="number" id="ev-price-site" placeholder="25" value="25" min="0" step="0.5"></div>
+            <div class="form-group"><label>Giorni early bird</label><input type="number" id="ev-eb-days" placeholder="5" value="5" min="1"></div>
+            <div class="form-group"><label>Apertura prenotazioni</label><input type="datetime-local" id="ev-open-at"></div>
+            <div class="form-group"><label>Capienza massima</label><input type="number" id="ev-capacity" placeholder="100" value="100" min="1"></div>
+            <div class="form-group"><label>Nome speaker</label><input type="text" id="ev-speaker-name" placeholder="Nome Cognome"></div>
+            <div class="form-group"><label>Bio speaker</label><input type="text" id="ev-speaker-bio" placeholder="CEO di..."></div>
+            <div class="form-group full"><label>Programma serata (agenda)</label><textarea id="ev-agenda" placeholder="21:00 - Aperitivo&#10;21:30 - Presentazioni&#10;22:00 - Talk"></textarea></div>
+            <div class="form-group full"><label>URL cover immagine</label><input type="url" id="ev-cover" placeholder="https://..."></div>
+            <div class="form-group"><label>Stato</label>
+              <select id="ev-status">
+                <option value="false">Bozza</option>
+                <option value="true">Pubblica subito</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:24px;">
+            <button class="btn-primary" onclick="createEvent()">Crea evento</button>
+          </div>
+          <div class="msg" id="event-msg"></div>
+        </div>
+
+        <!-- LISTA EVENTI -->
+        <div class="section-label" style="margin-bottom:20px;">Eventi esistenti</div>
+        <div id="admin-events-list">
+          <div style="color:var(--gray-3);font-size:14px;">Caricamento...</div>
+        </div>
+      </div>
+
+    </div><!-- end content -->
+  </div><!-- end layout -->
 
   <!-- SAVE BAR -->
   <div class="save-bar" id="save-bar">
@@ -396,6 +445,74 @@
     let isDirty = false;
     let allMembers = [];
 
+
+    // ── ADMIN ──
+    async function checkAdmin() {
+      const { data } = await sb.from('profiles').select('is_admin').eq('id', currentUser.id).single();
+      if (data?.is_admin) {
+        document.getElementById('admin-divider').style.display = 'block';
+        document.getElementById('admin-section-label').style.display = 'block';
+        document.getElementById('admin-tab-btn').style.display = 'flex';
+      }
+    }
+
+    async function createEvent() {
+      const title = document.getElementById('ev-title').value;
+      const date = document.getElementById('ev-date').value;
+      if (!title || !date) return showMsg('event-msg', 'Titolo e data obbligatori.', 'error');
+      const priceEb = Math.round(parseFloat(document.getElementById('ev-price-eb').value || 18) * 100);
+      const priceStd = Math.round(parseFloat(document.getElementById('ev-price-std').value || 20) * 100);
+      const priceSite = Math.round(parseFloat(document.getElementById('ev-price-site').value || 25) * 100);
+      const { data, error } = await sb.from('events').insert({
+        title,
+        description: document.getElementById('ev-desc').value,
+        event_date: date,
+        location: document.getElementById('ev-location').value,
+        price_early_bird: priceEb,
+        price_standard: priceStd,
+        price_on_site: priceSite,
+        early_bird_days: parseInt(document.getElementById('ev-eb-days').value || 5),
+        registration_open_at: document.getElementById('ev-open-at').value || null,
+        capacity: parseInt(document.getElementById('ev-capacity').value || 100),
+        speaker_name: document.getElementById('ev-speaker-name').value || null,
+        speaker_bio: document.getElementById('ev-speaker-bio').value || null,
+        agenda: document.getElementById('ev-agenda').value || null,
+        cover_url: document.getElementById('ev-cover').value || null,
+        is_published: document.getElementById('ev-status').value === 'true'
+      }).select().single();
+      if (error) return showMsg('event-msg', 'Errore: ' + error.message, 'error');
+      showMsg('event-msg', 'Evento creato con successo!', 'success');
+      loadAdminEvents();
+    }
+
+    async function togglePublish(id, current) {
+      await sb.from('events').update({ is_published: !current }).eq('id', id);
+      loadAdminEvents();
+    }
+
+    async function loadAdminEvents() {
+      const { data } = await sb.from('events').select('*').order('event_date', { ascending: false });
+      const container = document.getElementById('admin-events-list');
+      if (!data?.length) { container.innerHTML = '<div style="color:var(--gray-3);font-size:14px;">Nessun evento ancora.</div>'; return; }
+      container.innerHTML = data.map(ev => {
+        const date = new Date(ev.event_date).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const statusColor = ev.is_published ? '#4ade80' : 'var(--gray-3)';
+        const statusText = ev.is_published ? 'Pubblicato' : 'Bozza';
+        const eventUrl = window.location.origin + '/evento.html?id=' + ev.id;
+        return `<div style="background:var(--bg-2);border:1px solid var(--border);border-radius:4px;padding:20px 24px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:15px;font-weight:900;margin-bottom:6px;">${ev.title}</div>
+            <div style="font-size:12px;color:var(--gray-2);">${date} &nbsp;·&nbsp; ${ev.tickets_sold}/${ev.capacity} posti &nbsp;·&nbsp; <span style="color:${statusColor};">${statusText}</span></div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+            <button class="btn-secondary" style="font-size:11px;padding:6px 12px;" onclick="navigator.clipboard.writeText('${eventUrl}')">Copia link</button>
+            <a class="btn-secondary" href="${eventUrl}" target="_blank" style="font-size:11px;padding:6px 12px;text-decoration:none;">Anteprima</a>
+            <button class="btn-primary" style="font-size:11px;padding:6px 12px;" onclick="togglePublish('${ev.id}', ${ev.is_published})">${ev.is_published ? 'Nascondi' : 'Pubblica'}</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
     async function init() {
       const { data: { session } } = await sb.auth.getSession();
       if (!session) return window.location.href = 'login.html';
@@ -411,6 +528,7 @@
 
       await loadProfile();
       await loadPortfolio();
+      await checkAdmin();
     }
 
     // ── TABS ──
@@ -421,6 +539,7 @@
       btn.classList.add('active');
       if (name === 'biglietti') loadTickets();
       if (name === 'community') loadCommunity();
+      if (name === 'admin') loadAdminEvents();
     }
 
     // ── PROFILO ──

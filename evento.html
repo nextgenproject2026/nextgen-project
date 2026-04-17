@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evento — NextGen</title>
+  <link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0a; --bg-2: #111111; --bg-3: #1a1a1a;
+      --white: #fff; --gray-1: #e8e8e8; --gray-2: #a0a0a0; --gray-3: #444;
+      --border: rgba(255,255,255,0.1); --border-h: rgba(255,255,255,0.25);
+      --font: 'Satoshi', sans-serif;
+    }
+    body { font-family: var(--font); background: var(--bg); color: var(--white); -webkit-font-smoothing: antialiased; }
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 20px 48px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: rgba(10,10,10,0.95); backdrop-filter: blur(12px); z-index: 50; }
+    .nav-logo svg { width: 100px; }
+    .nav-logo svg polygon, .nav-logo svg path { fill: var(--white); }
+    .nav-right { display: flex; gap: 12px; }
+    .btn-sm { font-family: var(--font); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 8px 16px; border-radius: 4px; cursor: pointer; text-decoration: none; transition: opacity 0.2s; display: inline-block; }
+    .btn-white { background: var(--white); color: var(--bg); border: none; }
+    .btn-outline { background: transparent; color: var(--gray-2); border: 1px solid var(--border); }
+    .btn-outline:hover { color: var(--white); border-color: var(--border-h); }
+    .event-hero { position: relative; min-height: 480px; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; }
+    .event-cover { position: absolute; inset: 0; }
+    .event-cover img { width: 100%; height: 100%; object-fit: cover; opacity: 0.35; }
+    .event-cover-bg { width: 100%; height: 100%; background: linear-gradient(135deg, #1a1a1a, #0a0a0a); }
+    .hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(10,10,10,1) 0%, rgba(10,10,10,0.3) 70%, transparent 100%); }
+    .hero-content { position: relative; z-index: 2; padding: 60px 48px; max-width: 860px; }
+    .event-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gray-2); margin-bottom: 16px; }
+    .event-title { font-size: clamp(36px, 5vw, 64px); font-weight: 900; letter-spacing: -0.03em; line-height: 1; margin-bottom: 24px; }
+    .event-meta-row { display: flex; gap: 20px; flex-wrap: wrap; }
+    .meta-pill { font-size: 13px; color: var(--gray-2); }
+    .layout { max-width: 1060px; margin: 0 auto; padding: 60px 48px; display: grid; grid-template-columns: 1fr 360px; gap: 56px; align-items: start; }
+    .section-label { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gray-3); margin-bottom: 14px; }
+    .event-desc { font-size: 17px; color: var(--gray-1); line-height: 1.8; margin-bottom: 48px; white-space: pre-wrap; }
+    .speaker-card { display: flex; gap: 18px; background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; padding: 22px; margin-bottom: 48px; }
+    .sp-avatar { width: 52px; height: 52px; border-radius: 50%; background: var(--bg-3); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; color: var(--gray-3); flex-shrink: 0; }
+    .sp-name { font-size: 16px; font-weight: 900; margin-bottom: 4px; }
+    .sp-bio { font-size: 13px; color: var(--gray-2); line-height: 1.6; }
+    .program-item { display: flex; gap: 18px; padding: 16px 0; border-bottom: 1px solid var(--border); }
+    .program-item:first-child { border-top: 1px solid var(--border); }
+    .prog-time { font-size: 12px; font-weight: 700; color: var(--gray-3); width: 56px; flex-shrink: 0; padding-top: 2px; }
+    .prog-text { font-size: 14px; color: var(--gray-1); }
+    .booking-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; padding: 26px; position: sticky; top: 76px; }
+    .booking-card h3 { font-size: 19px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 20px; }
+    .price-tier { display: flex; justify-content: space-between; align-items: center; padding: 13px 15px; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 8px; }
+    .price-tier.active { border-color: var(--white); background: rgba(255,255,255,0.04); }
+    .price-tier.dim { opacity: 0.35; }
+    .tier-label { font-size: 13px; font-weight: 700; }
+    .tier-sub { font-size: 11px; color: var(--gray-2); margin-top: 2px; }
+    .tier-price { font-size: 19px; font-weight: 900; }
+    .divider { height: 1px; background: var(--border); margin: 18px 0; }
+    .spots-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--gray-2); margin-bottom: 18px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; flex-shrink: 0; }
+    .dot.low { background: #fbbf24; }
+    .dot.out { background: #ff6b6b; }
+    .btn-book { font-family: var(--font); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: var(--white); color: var(--bg); border: none; padding: 13px; border-radius: 4px; cursor: pointer; width: 100%; margin-bottom: 8px; transition: opacity 0.2s; }
+    .btn-book:hover { opacity: 0.85; }
+    .btn-book:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-onsite { font-family: var(--font); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: transparent; color: var(--white); border: 1px solid var(--border); padding: 13px; border-radius: 4px; cursor: pointer; width: 100%; transition: border-color 0.2s; }
+    .btn-onsite:hover { border-color: var(--border-h); }
+    .btn-onsite:disabled { opacity: 0.35; cursor: not-allowed; }
+    .booking-note { font-size: 11px; color: var(--gray-3); text-align: center; margin-top: 12px; line-height: 1.6; }
+    .success-box { background: rgba(50,200,100,0.08); border: 1px solid rgba(50,200,100,0.2); color: #4ade80; padding: 16px; border-radius: 4px; font-size: 14px; line-height: 1.6; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal { background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; width: 100%; max-width: 440px; padding: 28px; position: relative; }
+    .modal-close { position: absolute; top: 14px; right: 16px; background: none; border: none; color: var(--gray-2); font-size: 20px; cursor: pointer; line-height: 1; }
+    .modal h3 { font-size: 19px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 5px; }
+    .modal-sub { font-size: 13px; color: var(--gray-2); margin-bottom: 20px; }
+    .fg { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+    label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray-3); }
+    input { font-family: var(--font); font-size: 14px; background: var(--bg-3); border: 1px solid var(--border); color: var(--white); padding: 9px 12px; border-radius: 4px; outline: none; width: 100%; transition: border-color 0.2s; }
+    input:focus { border-color: rgba(255,255,255,0.3); }
+    input::placeholder { color: var(--gray-3); }
+    .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+    .btn-primary { font-family: var(--font); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: var(--white); color: var(--bg); border: none; padding: 11px 18px; border-radius: 4px; cursor: pointer; flex: 1; transition: opacity 0.2s; }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-secondary { font-family: var(--font); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: transparent; color: var(--gray-2); border: 1px solid var(--border); padding: 11px 18px; border-radius: 4px; cursor: pointer; }
+    .msg { font-size: 13px; margin-top: 10px; padding: 9px 12px; border-radius: 4px; display: none; }
+    .msg.success { background: rgba(50,200,100,0.1); border: 1px solid rgba(50,200,100,0.2); color: #4ade80; display: block; }
+    .msg.error { background: rgba(220,50,50,0.1); border: 1px solid rgba(220,50,50,0.2); color: #ff6b6b; display: block; }
+    @media (max-width: 860px) {
+      nav { padding: 16px 20px; }
+      .hero-content { padding: 40px 20px; }
+      .layout { grid-template-columns: 1fr; padding: 32px 20px; gap: 40px; }
+      .booking-card { position: static; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html" class="nav-logo">
+      <svg viewBox="0 0 629.36 216.06" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="526.76 203.06 527.86 201.96 527.86 131.95 582.65 202.02 583.69 203.06 600.13 203.06 601.17 202.02 601.17 101.52 600.07 100.42 584.68 100.42 583.58 101.52 583.58 171.53 527.63 101.51 526.53 100.42 511.37 100.42 510.27 101.52 510.27 202.02 511.31 203.06 526.76 203.06"/>
+        <polygon points="210.94 115.99 251.12 64.16 212.05 13 233.95 13 262.17 49.9 290.76 13 312.69 13 273.32 64.5 312.68 115.99 290.76 115.99 262.37 78.84 233.97 115.99 210.94 115.99"/>
+        <polygon points="498.96 186.23 484.97 203.05 429.99 203.05 428.89 201.95 428.89 101.16 429.99 100.06 493.77 100.06 494.87 101.16 494.87 117.28 493.77 118.38 447.22 118.38 447.22 142.94 484.24 142.94 485.34 144.04 485.34 160.17 484.24 161.27 447.22 161.27 447.22 184.73 498.17 184.73 498.96 186.23"/>
+        <path d="M369.15,57.72v-26.2h33.36l-15.03-18.33h-64.51l-1.1,1.1v16.13l1.1,1.1h27.49v68.18c-21.85,4.27-37.9,23.65-40.32,45.45H14.66V0H0v159.07h310.86c10.92,71.81,113.25,53.99,103.37-16.86h-36.29l-12.1,18.33h29.32c-6.78,27.96-40.54,38.19-59.25,14.17-27.88-35.78,20.13-81.84,52.91-47.22l10.45-13.09c-6.83-9.84-19.12-13.28-30.14-15.93v-26.82h245.56v144.42h14.66V57.72h-260.22Z"/>
+        <polygon points="205.79 99.18 191.8 116 136.82 116 135.72 114.9 135.72 14.11 136.82 13.01 200.6 13.01 201.7 14.11 201.7 30.23 200.6 31.33 154.05 31.33 154.05 55.89 191.07 55.89 192.17 56.99 192.17 73.12 191.07 74.22 154.05 74.22 154.05 97.68 205 97.68 205.79 99.18"/>
+        <polygon points="44.75 116 45.85 114.89 45.85 44.64 100.83 114.95 101.87 116 118.37 116 120.41 114.95 120.41 14.11 118.31 13.01 102.86 13.01 101.76 14.11 101.76 84.36 45.62 14.1 44.51 13.01 29.3 13.01 28.19 14.11 28.19 114.95 29.24 116 44.75 116"/>
+      </svg>
+    </a>
+    <div class="nav-right">
+      <a href="index.html#events" class="btn-sm btn-outline">← Tutti gli eventi</a>
+      <a href="area.html" class="btn-sm btn-white" id="nav-area-btn">Area personale</a>
+    </div>
+  </nav>
+
+  <div class="event-hero">
+    <div class="event-cover" id="event-cover"><div class="event-cover-bg"></div></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <div class="event-eyebrow">NextGen Project</div>
+      <h1 class="event-title" id="ev-title">Caricamento...</h1>
+      <div class="event-meta-row">
+        <span class="meta-pill" id="ev-date"></span>
+        <span class="meta-pill" id="ev-location"></span>
+        <span class="meta-pill" id="ev-spots"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div>
+      <div class="section-label">L'evento</div>
+      <div class="event-desc" id="ev-desc"></div>
+      <div id="speaker-sec" style="display:none;">
+        <div class="section-label">Speaker</div>
+        <div class="speaker-card">
+          <div class="sp-avatar" id="sp-av">?</div>
+          <div><div class="sp-name" id="sp-name"></div><div class="sp-bio" id="sp-bio"></div></div>
+        </div>
+      </div>
+      <div id="program-sec" style="display:none;">
+        <div class="section-label">Programma</div>
+        <div id="program-list"></div>
+      </div>
+    </div>
+
+    <div class="booking-card">
+      <h3>Prenota il tuo posto</h3>
+      <div id="tier-early" class="price-tier">
+        <div><div class="tier-label">Early Bird</div><div class="tier-sub">Primi 5 giorni</div></div>
+        <div class="tier-price">€18</div>
+      </div>
+      <div id="tier-standard" class="price-tier">
+        <div><div class="tier-label">Standard</div><div class="tier-sub">Prenotazione online</div></div>
+        <div class="tier-price">€20</div>
+      </div>
+      <div class="price-tier">
+        <div><div class="tier-label">In sede</div><div class="tier-sub">Pagamento all'ingresso</div></div>
+        <div class="tier-price">€25</div>
+      </div>
+      <div class="divider"></div>
+      <div class="spots-row"><span class="dot" id="spot-dot"></span><span id="spot-text">—</span></div>
+      <div id="booking-btns">
+        <button class="btn-book" id="btn-online" onclick="openModal('online')">Prenota e paga online</button>
+        <button class="btn-onsite" onclick="openModal('onsite')">Prenota — paga in sede (€25)</button>
+      </div>
+      <div class="booking-note">Prenotando crei automaticamente il tuo profilo nella community NextGen.</div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal()">×</button>
+      <h3 id="m-title">Prenota</h3>
+      <p class="modal-sub" id="m-sub"></p>
+      <div id="m-guest">
+        <div class="fg"><label>Nome completo</label><input type="text" id="b-name" placeholder="Mario Rossi"></div>
+        <div class="fg"><label>Email</label><input type="email" id="b-email" placeholder="tua@email.com"></div>
+        <div class="fg"><label>Password (per accedere alla tua area)</label><input type="password" id="b-pw" placeholder="Min. 8 caratteri"></div>
+        <div class="msg" id="m-msg"></div>
+        <div class="modal-actions">
+          <button class="btn-primary" id="m-btn" onclick="confirmGuest()">Conferma prenotazione</button>
+          <button class="btn-secondary" onclick="closeModal()">Annulla</button>
+        </div>
+      </div>
+      <div id="m-user" style="display:none;">
+        <p style="font-size:14px;color:var(--gray-1);margin-bottom:16px;">Stai prenotando come <strong id="m-user-email"></strong></p>
+        <div class="msg" id="m-msg2"></div>
+        <div class="modal-actions">
+          <button class="btn-primary" id="m-btn2" onclick="confirmUser()">Conferma prenotazione</button>
+          <button class="btn-secondary" onclick="closeModal()">Annulla</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SB_URL = 'https://gafmqwiympfzervppqvi.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhZm1xd2l5bXBmemVydnBwcXZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MTQ1NTIsImV4cCI6MjA5MTk5MDU1Mn0.7xDiXBLf_Zf85hNP0Zq1nQXsX0Vz7dRkE8XROafRpII';
+    const sb = supabase.createClient(SB_URL, SB_KEY);
+    let ev = null, user = null, mode = 'online';
+
+    async function init() {
+      const { data: { session } } = await sb.auth.getSession();
+      user = session?.user || null;
+      if (user) document.getElementById('nav-area-btn').textContent = 'La mia area';
+      const id = new URLSearchParams(window.location.search).get('id');
+      if (!id) return;
+      const { data } = await sb.from('events_with_availability').select('*').eq('id', id).single();
+      if (!data) { document.getElementById('ev-title').textContent = 'Evento non trovato'; return; }
+      ev = data;
+      renderEvent(data);
+    }
+
+    function renderEvent(d) {
+      document.title = d.title + ' — NextGen';
+      document.getElementById('ev-title').textContent = d.title;
+      const date = new Date(d.event_date).toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+      document.getElementById('ev-date').textContent = '📅 ' + date;
+      document.getElementById('ev-location').textContent = d.location ? '📍 ' + d.location : '';
+      document.getElementById('ev-spots').textContent = '👥 ' + d.tickets_sold + '/' + d.capacity;
+      document.getElementById('ev-desc').textContent = d.description || '';
+      if (d.cover_image_url) document.getElementById('event-cover').innerHTML = '<img src="'+d.cover_image_url+'" alt="">';
+      if (d.speaker_name) {
+        document.getElementById('speaker-sec').style.display = 'block';
+        document.getElementById('sp-name').textContent = d.speaker_name;
+        document.getElementById('sp-bio').textContent = d.speaker_bio || '';
+        document.getElementById('sp-av').textContent = d.speaker_name[0];
+      }
+      if (d.program) {
+        document.getElementById('program-sec').style.display = 'block';
+        document.getElementById('program-list').innerHTML = d.program.split('\n').filter(l=>l.trim()).map(l=>{
+          const p = l.split(' - ');
+          return '<div class="program-item"><span class="prog-time">'+(p[0]||'')+'</span><span class="prog-text">'+(p.slice(1).join(' - ')||l)+'</span></div>';
+        }).join('');
+      }
+      const type = d.current_ticket_type;
+      const avail = d.tickets_available;
+      document.getElementById('tier-early').className = 'price-tier' + (type==='early_bird' ? ' active' : ' dim');
+      document.getElementById('tier-standard').className = 'price-tier' + (type==='standard' ? ' active' : ' dim');
+      const dot = document.getElementById('spot-dot');
+      const txt = document.getElementById('spot-text');
+      if (type === 'sold_out') {
+        dot.className = 'dot out'; txt.textContent = 'Evento esaurito';
+        document.getElementById('btn-online').disabled = true;
+        document.querySelector('.btn-onsite').disabled = true;
+        document.getElementById('booking-btns').innerHTML = '<div class="success-box" style="background:rgba(220,50,50,0.08);border-color:rgba(220,50,50,0.2);color:#ff6b6b;">Evento esaurito</div>';
+      } else if (avail <= 10) {
+        dot.className = 'dot low'; txt.textContent = 'Ultimi ' + avail + ' posti';
+      } else {
+        dot.className = 'dot'; txt.textContent = avail + ' posti disponibili';
+      }
+      const op = d.current_online_price;
+      document.getElementById('btn-online').textContent = 'Prenota e paga online (' + (op ? '€'+(op/100).toFixed(0) : '—') + ')';
+    }
+
+    function openModal(m) {
+      mode = m;
+      document.getElementById('m-title').textContent = m === 'online' ? 'Prenota e paga online' : 'Prenota — paga in sede';
+      document.getElementById('m-sub').textContent = m === 'online' ? 'Pagamento sicuro con Stripe.' : 'Prenota ora, porta €25 all\'ingresso.';
+      if (user) {
+        document.getElementById('m-guest').style.display = 'none';
+        document.getElementById('m-user').style.display = 'block';
+        document.getElementById('m-user-email').textContent = user.email;
+      } else {
+        document.getElementById('m-guest').style.display = 'block';
+        document.getElementById('m-user').style.display = 'none';
+      }
+      document.getElementById('modal').classList.add('open');
+    }
+    function closeModal() { document.getElementById('modal').classList.remove('open'); }
+    document.getElementById('modal').addEventListener('click', e => { if (e.target === document.getElementById('modal')) closeModal(); });
+
+    async function confirmGuest() {
+      const name = document.getElementById('b-name').value.trim();
+      const email = document.getElementById('b-email').value.trim();
+      const pw = document.getElementById('b-pw').value;
+      if (!name||!email||!pw) return msg('m-msg','Compila tutti i campi.','error');
+      if (pw.length < 8) return msg('m-msg','Password minimo 8 caratteri.','error');
+      document.getElementById('m-btn').disabled = true;
+      document.getElementById('m-btn').textContent = 'In corso...';
+      let uid;
+      const { data: su, error: se } = await sb.auth.signUp({ email, password: pw, options: { data: { full_name: name } } });
+      if (se) {
+        const { data: si, error: sie } = await sb.auth.signInWithPassword({ email, password: pw });
+        if (sie) { document.getElementById('m-btn').disabled = false; document.getElementById('m-btn').textContent = 'Conferma prenotazione'; return msg('m-msg', sie.message, 'error'); }
+        uid = si.user.id; user = si.user;
+      } else { uid = su.user.id; user = su.user; }
+      await book(uid, email);
+    }
+
+    async function confirmUser() {
+      document.getElementById('m-btn2').disabled = true;
+      document.getElementById('m-btn2').textContent = 'In corso...';
+      await book(user.id, user.email);
+    }
+
+    async function book(uid, email) {
+      if (mode === 'online') {
+        const type = ev.current_ticket_type === 'early_bird' ? 'early_bird' : 'standard';
+        try {
+          const res = await fetch('/api/create-checkout', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ event_id: ev.id, ticket_type: type, user_id: uid, user_email: email }) });
+          const { url, error } = await res.json();
+          if (error) throw new Error(error);
+          window.location.href = url;
+        } catch(e) {
+          msg('m-msg', e.message, 'error');
+          document.getElementById('m-btn').disabled = false;
+          document.getElementById('m-btn').textContent = 'Conferma prenotazione';
+        }
+      } else {
+        const { error } = await sb.from('tickets').insert({ event_id: ev.id, user_id: uid, ticket_type: 'standard', price_paid: ev.price_onsite || 2500, payment_method: 'onsite', status: 'confirmed' });
+        if (error) { msg(user ? 'm-msg2' : 'm-msg', error.message, 'error'); document.getElementById('m-btn2').disabled = false; document.getElementById('m-btn2').textContent = 'Conferma prenotazione'; return; }
+        await sb.rpc('increment_tickets_sold', { event_id: ev.id });
+        closeModal();
+        document.getElementById('booking-btns').innerHTML = '<div class="success-box"><strong>Posto confermato!</strong><br>Ti aspettiamo. Ricorda di portare €25 all\'ingresso.</div>';
+      }
+    }
+
+    function msg(id, text, type) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = text; el.className = 'msg ' + type;
+    }
+
+    init();
+  </script>
+</body>
+</html>

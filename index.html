@@ -818,33 +818,12 @@
 
       <!-- STATO: nessun evento in programma -->
       <!-- Quando hai eventi, sostituisci questo blocco con le card -->
-      <div class="events-grid">
+      <div class="events-grid" id="events-grid">
         <div class="events-empty fade-up">
           <p>Nessun evento in programma al momento.<br>Seguici su Instagram per non perdere i prossimi annunci.</p>
           <a href="https://www.instagram.com/nextgenproject_/" target="_blank" class="btn-primary">Seguici su Instagram</a>
         </div>
       </div>
-
-      <!-- TEMPLATE CARD EVENTO (commentato, da usare quando ci sono eventi) -->
-      <!--
-      <div class="events-grid">
-        <a href="#" class="event-card featured">
-          <div class="event-img">
-            <span class="event-img-placeholder">Cover evento</span>
-            <span class="event-badge">Prossimo</span>
-          </div>
-          <div class="event-body">
-            <div class="event-date">Gio 15 Maggio 2025 · 21:00</div>
-            <h3>NextGen Meetup #2</h3>
-            <p>Il secondo appuntamento della community. Speaker, networking e tante novità.</p>
-            <div class="event-meta">
-              <span class="event-location">📍 Castelfranco Veneto</span>
-              <span class="event-price">€10</span>
-            </div>
-          </div>
-        </a>
-      </div>
-      -->
 
     </div>
   </section>
@@ -951,6 +930,38 @@
       });
     }, { threshold: 0.1 });
     document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+    // Carica eventi dal DB
+    (async function loadEvents() {
+      const SB_URL = 'https://gafmqwiympfzervppqvi.supabase.co';
+      const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhZm1xd2l5bXBmemVydnBwcXZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MTQ1NTIsImV4cCI6MjA5MTk5MDU1Mn0.7xDiXBLf_Zf85hNP0Zq1nQXsX0Vz7dRkE8XROafRpII';
+      const sb = supabase.createClient(SB_URL, SB_KEY);
+      const { data: events } = await sb.from('events_with_availability').select('*').order('event_date', { ascending: true });
+      const grid = document.getElementById('events-grid');
+      if (!events || !events.length) return;
+      grid.innerHTML = events.map((ev, i) => {
+        const date = new Date(ev.event_date).toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const price = ev.current_ticket_type === 'early_bird' ? ev.price_early_bird : ev.price_standard;
+        const priceStr = (price / 100).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
+        const spotsLeft = ev.tickets_available;
+        return `<a href="evento.html?id=${ev.id}" class="event-card ${i === 0 ? 'featured' : ''} fade-up">
+          <div class="event-img" style="background:${ev.cover_url ? 'none' : 'var(--bg-3)'}">
+            ${ev.cover_url ? `<img src="${ev.cover_url}" style="width:100%;height:100%;object-fit:cover;">` : '<span class="event-img-placeholder">NextGen</span>'}
+            <span class="event-badge">${i === 0 ? 'Prossimo' : 'In arrivo'}</span>
+          </div>
+          <div class="event-body">
+            <div class="event-date">${date}</div>
+            <h3>${ev.title}</h3>
+            <p>${ev.description ? ev.description.slice(0, 100) + '...' : 'Scopri tutti i dettagli e prenota il tuo posto.'}</p>
+            <div class="event-meta">
+              <span class="event-location">📍 ${ev.location || 'Castelfranco Veneto'}</span>
+              <span class="event-price">${ev.is_sold_out ? 'Esaurito' : priceStr}</span>
+            </div>
+          </div>
+        </a>`;
+      }).join('');
+      document.querySelectorAll('#events-grid .fade-up').forEach(el => observer.observe(el));
+    })();
   </script>
 
 </body>
