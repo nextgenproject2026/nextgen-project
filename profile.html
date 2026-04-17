@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Il mio profilo — NextGen</title>
+  <link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0a; --bg-2: #111111; --bg-3: #1a1a1a;
+      --white: #ffffff; --gray-1: #e8e8e8; --gray-2: #a0a0a0; --gray-3: #444444;
+      --border: rgba(255,255,255,0.1); --font: 'Satoshi', sans-serif;
+    }
+    body { font-family: var(--font); background: var(--bg); color: var(--white); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 20px 48px; border-bottom: 1px solid var(--border); }
+    .nav-logo svg { width: 100px; }
+    .nav-logo svg polygon, .nav-logo svg path { fill: var(--white); }
+    .nav-links { display: flex; gap: 20px; align-items: center; }
+    .nav-link { font-size: 13px; font-weight: 700; color: var(--gray-2); text-decoration: none; transition: color 0.2s; }
+    .nav-link:hover { color: var(--white); }
+    .btn-sm { font-family: var(--font); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: transparent; color: var(--gray-2); border: 1px solid var(--border); padding: 8px 14px; border-radius: 4px; cursor: pointer; transition: color 0.2s; text-decoration: none; }
+    .btn-sm:hover { color: var(--white); }
+
+    .main { max-width: 860px; margin: 0 auto; padding: 60px 48px; }
+
+    /* HEADER PROFILO */
+    .profile-header { display: flex; gap: 32px; align-items: flex-start; margin-bottom: 48px; padding-bottom: 48px; border-bottom: 1px solid var(--border); }
+    .avatar-wrap { position: relative; flex-shrink: 0; }
+    .avatar { width: 100px; height: 100px; border-radius: 50%; background: var(--bg-3); border: 1px solid var(--border); object-fit: cover; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 900; color: var(--gray-3); overflow: hidden; }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-upload { position: absolute; bottom: 0; right: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--white); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .avatar-upload svg { width: 14px; height: 14px; }
+    .profile-info { flex: 1; }
+    .profile-name { font-size: 28px; font-weight: 900; letter-spacing: -0.025em; margin-bottom: 4px; }
+    .profile-role { font-size: 16px; color: var(--gray-2); margin-bottom: 16px; }
+    .profile-meta { display: flex; gap: 16px; flex-wrap: wrap; }
+    .meta-item { font-size: 13px; color: var(--gray-3); display: flex; align-items: center; gap: 6px; }
+
+    /* TOGGLE PRIVACY */
+    .privacy-bar { display: flex; align-items: center; justify-content: space-between; background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; padding: 16px 20px; margin-bottom: 40px; }
+    .privacy-info h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .privacy-info p { font-size: 13px; color: var(--gray-2); }
+    .toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; inset: 0; background: var(--gray-3); border-radius: 24px; cursor: pointer; transition: background 0.2s; }
+    .toggle-slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: transform 0.2s; }
+    .toggle input:checked + .toggle-slider { background: #4ade80; }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+    /* SEZIONI */
+    .section { margin-bottom: 40px; }
+    .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .section-title { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gray-3); }
+    .edit-btn { font-family: var(--font); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: transparent; color: var(--gray-2); border: 1px solid var(--border); padding: 6px 12px; border-radius: 3px; cursor: pointer; transition: color 0.2s; }
+    .edit-btn:hover { color: var(--white); }
+
+    /* FORM FIELDS */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray-3); }
+    input, textarea, select { font-family: var(--font); font-size: 14px; background: var(--bg-2); border: 1px solid var(--border); color: var(--white); padding: 10px 14px; border-radius: 4px; outline: none; transition: border-color 0.2s; width: 100%; }
+    textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+    input:focus, textarea:focus { border-color: rgba(255,255,255,0.3); }
+    input::placeholder, textarea::placeholder { color: var(--gray-3); }
+    .skills-input { display: flex; flex-wrap: wrap; gap: 8px; background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; padding: 8px 12px; min-height: 44px; align-items: center; cursor: text; }
+    .skill-tag { font-size: 12px; font-weight: 700; background: var(--bg-3); border: 1px solid var(--border); color: var(--gray-1); padding: 4px 10px; border-radius: 2px; display: flex; align-items: center; gap: 6px; }
+    .skill-tag button { background: none; border: none; color: var(--gray-3); cursor: pointer; font-size: 14px; line-height: 1; padding: 0; }
+    .skill-tag button:hover { color: var(--white); }
+    .skills-input-field { background: none; border: none; outline: none; color: var(--white); font-family: var(--font); font-size: 13px; flex: 1; min-width: 120px; padding: 2px 4px; }
+
+    /* PORTFOLIO */
+    .portfolio-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .portfolio-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+    .portfolio-img { width: 100%; aspect-ratio: 16/9; background: var(--bg-3); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--gray-3); }
+    .portfolio-body { padding: 14px; }
+    .portfolio-body h4 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+    .portfolio-body p { font-size: 12px; color: var(--gray-2); line-height: 1.5; margin-bottom: 10px; }
+    .portfolio-body a { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gray-2); text-decoration: none; transition: color 0.2s; }
+    .portfolio-body a:hover { color: var(--white); }
+    .add-portfolio { border: 1px dashed var(--border); border-radius: 4px; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; color: var(--gray-3); transition: border-color 0.2s, color 0.2s; background: none; width: 100%; font-family: var(--font); }
+    .add-portfolio:hover { border-color: rgba(255,255,255,0.25); color: var(--gray-2); }
+
+    /* SAVE BAR */
+    .save-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-2); border-top: 1px solid var(--border); padding: 16px 48px; display: flex; align-items: center; justify-content: space-between; z-index: 50; transform: translateY(100%); transition: transform 0.3s; }
+    .save-bar.visible { transform: translateY(0); }
+    .save-bar p { font-size: 14px; color: var(--gray-2); }
+    .save-bar-actions { display: flex; gap: 12px; }
+    .btn-save { font-family: var(--font); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: var(--white); color: var(--bg); border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; transition: opacity 0.2s; }
+    .btn-save:hover { opacity: 0.85; }
+    .btn-cancel { font-family: var(--font); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: transparent; color: var(--gray-2); border: 1px solid var(--border); padding: 12px 24px; border-radius: 4px; cursor: pointer; }
+
+    /* MODAL PORTFOLIO */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal { background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; padding: 32px; width: 100%; max-width: 480px; }
+    .modal h3 { font-size: 20px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 24px; }
+    .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
+
+    .msg { font-size: 13px; margin-top: 12px; display: none; }
+    .msg.success { color: #4ade80; display: block; }
+    .msg.error { color: #ff6b6b; display: block; }
+
+    @media (max-width: 700px) {
+      nav { padding: 16px 20px; }
+      .main { padding: 32px 20px; }
+      .profile-header { flex-direction: column; }
+      .form-grid { grid-template-columns: 1fr; }
+      .portfolio-grid { grid-template-columns: 1fr 1fr; }
+      .save-bar { padding: 16px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="nav-logo">
+      <svg viewBox="0 0 629.36 216.06" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="526.76 203.06 527.86 201.96 527.86 131.95 582.65 202.02 583.69 203.06 600.13 203.06 601.17 202.02 601.17 101.52 600.07 100.42 584.68 100.42 583.58 101.52 583.58 171.53 527.63 101.51 526.53 100.42 511.37 100.42 510.27 101.52 510.27 202.02 511.31 203.06 526.76 203.06"/>
+        <polygon points="210.94 115.99 251.12 64.16 212.05 13 233.95 13 262.17 49.9 290.76 13 312.69 13 273.32 64.5 312.68 115.99 290.76 115.99 262.37 78.84 233.97 115.99 210.94 115.99"/>
+        <polygon points="498.96 186.23 484.97 203.05 429.99 203.05 428.89 201.95 428.89 101.16 429.99 100.06 493.77 100.06 494.87 101.16 494.87 117.28 493.77 118.38 447.22 118.38 447.22 142.94 484.24 142.94 485.34 144.04 485.34 160.17 484.24 161.27 447.22 161.27 447.22 184.73 498.17 184.73 498.96 186.23"/>
+        <path d="M369.15,57.72v-26.2h33.36l-15.03-18.33h-64.51l-1.1,1.1v16.13l1.1,1.1h27.49v68.18c-21.85,4.27-37.9,23.65-40.32,45.45H14.66V0H0v159.07h310.86c10.92,71.81,113.25,53.99,103.37-16.86h-36.29l-12.1,18.33h29.32c-6.78,27.96-40.54,38.19-59.25,14.17-27.88-35.78,20.13-81.84,52.91-47.22l10.45-13.09c-6.83-9.84-19.12-13.28-30.14-15.93v-26.82h245.56v144.42h14.66V57.72h-260.22Z"/>
+        <polygon points="205.79 99.18 191.8 116 136.82 116 135.72 114.9 135.72 14.11 136.82 13.01 200.6 13.01 201.7 14.11 201.7 30.23 200.6 31.33 154.05 31.33 154.05 55.89 191.07 55.89 192.17 56.99 192.17 73.12 191.07 74.22 154.05 74.22 154.05 97.68 205 97.68 205.79 99.18"/>
+        <polygon points="44.75 116 45.85 114.89 45.85 44.64 100.83 114.95 101.87 116 118.37 116 120.41 114.95 120.41 14.11 118.31 13.01 102.86 13.01 101.76 14.11 101.76 84.36 45.62 14.1 44.51 13.01 29.3 13.01 28.19 14.11 28.19 114.95 29.24 116 44.75 116"/>
+      </svg>
+    </a>
+    <div class="nav-links">
+      <a href="community.html" class="nav-link">Community</a>
+      <a href="dashboard.html" class="nav-link">I miei biglietti</a>
+      <a href="#" class="btn-sm" onclick="handleLogout()">Esci</a>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- HEADER -->
+    <div class="profile-header">
+      <div class="avatar-wrap">
+        <div class="avatar" id="avatar-display">
+          <span id="avatar-initials">?</span>
+        </div>
+        <button class="avatar-upload" onclick="document.getElementById('avatar-input').click()" title="Cambia foto">
+          <svg viewBox="0 0 14 14" fill="none"><path d="M9.5 2L12 4.5M2 10.5V12H3.5L11 4.5L8.5 2L2 10.5Z" stroke="#000" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <input type="file" id="avatar-input" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
+      </div>
+      <div class="profile-info">
+        <div class="profile-name" id="header-name">—</div>
+        <div class="profile-role" id="header-role">—</div>
+        <div class="profile-meta">
+          <span class="meta-item" id="header-company">—</span>
+          <span class="meta-item" id="header-location">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOGGLE PRIVACY -->
+    <div class="privacy-bar">
+      <div class="privacy-info">
+        <h4>Visibilità nella community</h4>
+        <p>Se attivo, il tuo profilo appare nella directory NextGen e altri possono contattarti.</p>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="privacy-toggle" onchange="updatePrivacy(this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <!-- INFORMAZIONI BASE -->
+    <div class="section">
+      <div class="section-head">
+        <span class="section-title">Informazioni</span>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nome completo</label>
+          <input type="text" id="f-name" placeholder="Mario Rossi" oninput="markDirty()" />
+        </div>
+        <div class="form-group">
+          <label>Ruolo</label>
+          <input type="text" id="f-role" placeholder="Founder, Designer, Developer..." oninput="markDirty()" />
+        </div>
+        <div class="form-group">
+          <label>Azienda</label>
+          <input type="text" id="f-company" placeholder="Nome azienda" oninput="markDirty()" />
+        </div>
+        <div class="form-group">
+          <label>Settore</label>
+          <select id="f-sector" onchange="markDirty()">
+            <option value="">Seleziona...</option>
+            <option>Tech & Software</option>
+            <option>Marketing & Comunicazione</option>
+            <option>Design & Creatività</option>
+            <option>Finance & Consulenza</option>
+            <option>Manifattura & Produzione</option>
+            <option>Retail & E-commerce</option>
+            <option>Salute & Benessere</option>
+            <option>Educazione & Formazione</option>
+            <option>Immobiliare</option>
+            <option>Hospitality & Food</option>
+            <option>Legale</option>
+            <option>Altro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Città</label>
+          <input type="text" id="f-location" placeholder="Castelfranco Veneto" oninput="markDirty()" />
+        </div>
+        <div class="form-group">
+          <label>Sito web</label>
+          <input type="url" id="f-website" placeholder="https://tuosito.com" oninput="markDirty()" />
+        </div>
+        <div class="form-group">
+          <label>LinkedIn</label>
+          <input type="url" id="f-linkedin" placeholder="https://linkedin.com/in/..." oninput="markDirty()" />
+        </div>
+        <div class="form-group">
+          <label>Telefono</label>
+          <input type="tel" id="f-phone" placeholder="+39 333 1234567" oninput="markDirty()" />
+        </div>
+        <div class="form-group full">
+          <label>Bio</label>
+          <textarea id="f-bio" placeholder="Racconta chi sei, cosa fai e cosa ti appassiona..." oninput="markDirty()"></textarea>
+        </div>
+        <div class="form-group full">
+          <label>Skills</label>
+          <div class="skills-input" id="skills-container" onclick="document.getElementById('skill-input').focus()">
+            <input class="skills-input-field" id="skill-input" placeholder="Aggiungi una skill e premi Invio..." onkeydown="handleSkillInput(event)" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PORTFOLIO -->
+    <div class="section">
+      <div class="section-head">
+        <span class="section-title">Portfolio & Progetti</span>
+      </div>
+      <div class="portfolio-grid" id="portfolio-grid">
+        <button class="add-portfolio" onclick="openPortfolioModal()">+ Aggiungi progetto</button>
+      </div>
+    </div>
+
+    <div class="msg" id="save-msg"></div>
+
+  </main>
+
+  <!-- SAVE BAR -->
+  <div class="save-bar" id="save-bar">
+    <p>Hai modifiche non salvate</p>
+    <div class="save-bar-actions">
+      <button class="btn-cancel" onclick="cancelChanges()">Annulla</button>
+      <button class="btn-save" onclick="saveProfile()">Salva profilo</button>
+    </div>
+  </div>
+
+  <!-- MODAL PORTFOLIO -->
+  <div class="modal-overlay" id="portfolio-modal">
+    <div class="modal">
+      <h3>Aggiungi progetto</h3>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="form-group">
+          <label>Titolo</label>
+          <input type="text" id="p-title" placeholder="Nome del progetto" />
+        </div>
+        <div class="form-group">
+          <label>Descrizione</label>
+          <textarea id="p-desc" placeholder="Breve descrizione..." style="min-height:70px;"></textarea>
+        </div>
+        <div class="form-group">
+          <label>URL</label>
+          <input type="url" id="p-url" placeholder="https://..." />
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-save" onclick="savePortfolioItem()">Salva</button>
+        <button class="btn-cancel" onclick="closePortfolioModal()">Annulla</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://gafmqwiympfzervppqvi.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhZm1xd2l5bXBmemVydnBwcXZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MTQ1NTIsImV4cCI6MjA5MTk5MDU1Mn0.7xDiXBLf_Zf85hNP0Zq1nQXsX0Vz7dRkE8XROafRpII';
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentUser = null;
+    let originalData = {};
+    let skills = [];
+    let isDirty = false;
+
+    async function init() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) return window.location.href = 'login.html';
+      currentUser = session.user;
+      await loadProfile();
+      await loadPortfolio();
+    }
+
+    async function loadProfile() {
+      const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+      if (!data) return;
+      originalData = data;
+
+      document.getElementById('f-name').value = data.full_name || '';
+      document.getElementById('f-role').value = data.role || '';
+      document.getElementById('f-company').value = data.company || '';
+      document.getElementById('f-sector').value = data.sector || '';
+      document.getElementById('f-location').value = data.location || '';
+      document.getElementById('f-website').value = data.website || '';
+      document.getElementById('f-linkedin').value = data.linkedin || '';
+      document.getElementById('f-phone').value = data.phone || '';
+      document.getElementById('f-bio').value = data.bio || '';
+      document.getElementById('privacy-toggle').checked = data.is_public ?? true;
+
+      skills = data.skills || [];
+      renderSkills();
+      updateHeader(data);
+
+      if (data.avatar_url) {
+        document.getElementById('avatar-initials').style.display = 'none';
+        const img = document.createElement('img');
+        img.src = data.avatar_url;
+        document.getElementById('avatar-display').appendChild(img);
+      } else {
+        const initials = (data.full_name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+        document.getElementById('avatar-initials').textContent = initials;
+      }
+    }
+
+    function updateHeader(data) {
+      document.getElementById('header-name').textContent = data.full_name || '—';
+      document.getElementById('header-role').textContent = [data.role, data.company].filter(Boolean).join(' @ ') || '—';
+      document.getElementById('header-company').textContent = data.sector || '';
+      document.getElementById('header-location').textContent = data.location || '';
+    }
+
+    async function loadPortfolio() {
+      const { data } = await sb.from('portfolio').select('*').eq('user_id', currentUser.id).order('created_at');
+      const grid = document.getElementById('portfolio-grid');
+      const addBtn = grid.querySelector('.add-portfolio');
+      grid.innerHTML = '';
+      (data || []).forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'portfolio-card';
+        card.innerHTML = `
+          <div class="portfolio-img">Progetto</div>
+          <div class="portfolio-body">
+            <h4>${item.title}</h4>
+            <p>${item.description || ''}</p>
+            ${item.url ? `<a href="${item.url}" target="_blank">Vedi progetto →</a>` : ''}
+          </div>`;
+        grid.appendChild(card);
+      });
+      grid.appendChild(addBtn || createAddBtn());
+    }
+
+    function createAddBtn() {
+      const btn = document.createElement('button');
+      btn.className = 'add-portfolio';
+      btn.textContent = '+ Aggiungi progetto';
+      btn.onclick = openPortfolioModal;
+      return btn;
+    }
+
+    // SKILLS
+    function renderSkills() {
+      const container = document.getElementById('skills-container');
+      const input = document.getElementById('skill-input');
+      container.querySelectorAll('.skill-tag').forEach(t => t.remove());
+      skills.forEach((skill, i) => {
+        const tag = document.createElement('span');
+        tag.className = 'skill-tag';
+        tag.innerHTML = `${skill}<button onclick="removeSkill(${i})">×</button>`;
+        container.insertBefore(tag, input);
+      });
+    }
+
+    function handleSkillInput(e) {
+      if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault();
+        const val = e.target.value.trim().replace(',', '');
+        if (val && !skills.includes(val)) {
+          skills.push(val);
+          renderSkills();
+          markDirty();
+        }
+        e.target.value = '';
+      }
+    }
+
+    function removeSkill(i) {
+      skills.splice(i, 1);
+      renderSkills();
+      markDirty();
+    }
+
+    // DIRTY STATE
+    function markDirty() {
+      if (!isDirty) {
+        isDirty = true;
+        document.getElementById('save-bar').classList.add('visible');
+      }
+    }
+
+    function cancelChanges() {
+      loadProfile();
+      isDirty = false;
+      document.getElementById('save-bar').classList.remove('visible');
+    }
+
+    async function saveProfile() {
+      const updates = {
+        full_name: document.getElementById('f-name').value,
+        role: document.getElementById('f-role').value,
+        company: document.getElementById('f-company').value,
+        sector: document.getElementById('f-sector').value,
+        location: document.getElementById('f-location').value,
+        website: document.getElementById('f-website').value,
+        linkedin: document.getElementById('f-linkedin').value,
+        phone: document.getElementById('f-phone').value,
+        bio: document.getElementById('f-bio').value,
+        skills,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await sb.from('profiles').update(updates).eq('id', currentUser.id);
+      if (error) {
+        showMsg('Errore nel salvataggio: ' + error.message, 'error');
+        return;
+      }
+
+      updateHeader(updates);
+      isDirty = false;
+      document.getElementById('save-bar').classList.remove('visible');
+      showMsg('Profilo salvato.', 'success');
+    }
+
+    async function updatePrivacy(value) {
+      await sb.from('profiles').update({ is_public: value }).eq('id', currentUser.id);
+    }
+
+    async function uploadAvatar(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const ext = file.name.split('.').pop();
+      const path = `avatars/${currentUser.id}.${ext}`;
+      const { error: uploadError } = await sb.storage.from('profiles').upload(path, file, { upsert: true });
+      if (uploadError) return showMsg('Errore upload: ' + uploadError.message, 'error');
+      const { data } = sb.storage.from('profiles').getPublicUrl(path);
+      await sb.from('profiles').update({ avatar_url: data.publicUrl }).eq('id', currentUser.id);
+      const avatarDiv = document.getElementById('avatar-display');
+      avatarDiv.querySelector('span').style.display = 'none';
+      const existing = avatarDiv.querySelector('img');
+      if (existing) existing.src = data.publicUrl;
+      else { const img = document.createElement('img'); img.src = data.publicUrl; avatarDiv.appendChild(img); }
+    }
+
+    // PORTFOLIO MODAL
+    function openPortfolioModal() { document.getElementById('portfolio-modal').classList.add('open'); }
+    function closePortfolioModal() { document.getElementById('portfolio-modal').classList.remove('open'); }
+
+    async function savePortfolioItem() {
+      const title = document.getElementById('p-title').value;
+      if (!title) return;
+      const { error } = await sb.from('portfolio').insert({
+        user_id: currentUser.id,
+        title,
+        description: document.getElementById('p-desc').value,
+        url: document.getElementById('p-url').value
+      });
+      if (!error) { closePortfolioModal(); loadPortfolio(); }
+    }
+
+    function showMsg(text, type) {
+      const el = document.getElementById('save-msg');
+      el.textContent = text;
+      el.className = 'msg ' + type;
+      setTimeout(() => el.className = 'msg', 3000);
+    }
+
+    async function handleLogout() {
+      await sb.auth.signOut();
+      window.location.href = 'index.html';
+    }
+
+    init();
+  </script>
+</body>
+</html>

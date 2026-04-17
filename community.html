@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Community — NextGen</title>
+  <link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0a; --bg-2: #111111; --bg-3: #1a1a1a;
+      --white: #ffffff; --gray-1: #e8e8e8; --gray-2: #a0a0a0; --gray-3: #444444;
+      --border: rgba(255,255,255,0.1); --font: 'Satoshi', sans-serif;
+    }
+    body { font-family: var(--font); background: var(--bg); color: var(--white); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 20px 48px; border-bottom: 1px solid var(--border); }
+    .nav-logo svg { width: 100px; }
+    .nav-logo svg polygon, .nav-logo svg path { fill: var(--white); }
+    .nav-links { display: flex; gap: 20px; align-items: center; }
+    .nav-link { font-size: 13px; font-weight: 700; color: var(--gray-2); text-decoration: none; transition: color 0.2s; }
+    .nav-link:hover, .nav-link.active { color: var(--white); }
+    .btn-sm { font-family: var(--font); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: var(--white); color: var(--bg); border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; text-decoration: none; }
+
+    .main { max-width: 1100px; margin: 0 auto; padding: 60px 48px; }
+
+    /* HEADER */
+    .page-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 48px; gap: 32px; }
+    .page-header h1 { font-size: 40px; font-weight: 900; letter-spacing: -0.03em; }
+    .page-header p { font-size: 15px; color: var(--gray-2); margin-top: 8px; }
+
+    /* FILTRI */
+    .filters { display: flex; gap: 12px; margin-bottom: 40px; flex-wrap: wrap; align-items: center; }
+    .search-wrap { flex: 1; min-width: 200px; position: relative; }
+    .search-wrap input { font-family: var(--font); font-size: 14px; width: 100%; background: var(--bg-2); border: 1px solid var(--border); color: var(--white); padding: 10px 14px 10px 38px; border-radius: 4px; outline: none; transition: border-color 0.2s; }
+    .search-wrap input:focus { border-color: rgba(255,255,255,0.3); }
+    .search-wrap input::placeholder { color: var(--gray-3); }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--gray-3); }
+    .filter-select { font-family: var(--font); font-size: 13px; background: var(--bg-2); border: 1px solid var(--border); color: var(--gray-2); padding: 10px 14px; border-radius: 4px; outline: none; cursor: pointer; }
+    .filter-select:focus { border-color: rgba(255,255,255,0.3); }
+    .results-count { font-size: 13px; color: var(--gray-3); white-space: nowrap; }
+
+    /* GRID */
+    .members-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+
+    /* CARD */
+    .member-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; padding: 24px; cursor: pointer; transition: border-color 0.2s, transform 0.2s; text-decoration: none; color: inherit; display: block; }
+    .member-card:hover { border-color: rgba(255,255,255,0.25); transform: translateY(-2px); }
+    .card-top { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+    .member-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--bg-3); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 900; color: var(--gray-2); flex-shrink: 0; overflow: hidden; }
+    .member-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .member-name { font-size: 16px; font-weight: 900; letter-spacing: -0.01em; margin-bottom: 2px; }
+    .member-role { font-size: 13px; color: var(--gray-2); }
+    .member-bio { font-size: 13px; color: var(--gray-2); line-height: 1.6; margin-bottom: 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .member-skills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+    .skill-chip { font-size: 11px; font-weight: 700; color: var(--gray-2); background: var(--bg-3); border: 1px solid var(--border); padding: 3px 8px; border-radius: 2px; }
+    .card-footer { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 14px; }
+    .member-sector { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray-3); }
+    .member-location { font-size: 12px; color: var(--gray-3); }
+
+    /* EMPTY */
+    .empty { text-align: center; padding: 80px 24px; color: var(--gray-2); grid-column: 1 / -1; }
+    .empty p { font-size: 16px; margin-bottom: 8px; }
+    .empty small { font-size: 13px; color: var(--gray-3); }
+
+    /* MODAL PROFILO */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal { background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; }
+    .modal-header { padding: 28px 28px 0; display: flex; align-items: flex-start; gap: 20px; }
+    .modal-avatar { width: 72px; height: 72px; border-radius: 50%; background: var(--bg-3); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; color: var(--gray-2); flex-shrink: 0; overflow: hidden; }
+    .modal-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .modal-name { font-size: 22px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 4px; }
+    .modal-role { font-size: 14px; color: var(--gray-2); margin-bottom: 12px; }
+    .modal-links { display: flex; gap: 10px; flex-wrap: wrap; }
+    .modal-link { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gray-2); text-decoration: none; border: 1px solid var(--border); padding: 5px 10px; border-radius: 3px; transition: color 0.2s; }
+    .modal-link:hover { color: var(--white); }
+    .modal-body { padding: 24px 28px; }
+    .modal-section { margin-bottom: 24px; }
+    .modal-section-title { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gray-3); margin-bottom: 10px; }
+    .modal-bio { font-size: 15px; color: var(--gray-1); line-height: 1.75; }
+    .modal-skills { display: flex; flex-wrap: wrap; gap: 8px; }
+    .modal-skill { font-size: 12px; font-weight: 700; color: var(--gray-2); background: var(--bg-3); border: 1px solid var(--border); padding: 4px 10px; border-radius: 2px; }
+
+    /* FORM CONTATTO */
+    .contact-form { display: flex; flex-direction: column; gap: 12px; }
+    .contact-form input, .contact-form textarea { font-family: var(--font); font-size: 14px; background: var(--bg-3); border: 1px solid var(--border); color: var(--white); padding: 10px 14px; border-radius: 4px; outline: none; transition: border-color 0.2s; width: 100%; }
+    .contact-form textarea { min-height: 80px; resize: vertical; line-height: 1.6; }
+    .contact-form input:focus, .contact-form textarea:focus { border-color: rgba(255,255,255,0.3); }
+    .contact-form input::placeholder, .contact-form textarea::placeholder { color: var(--gray-3); }
+    .btn-send { font-family: var(--font); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: var(--white); color: var(--bg); border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; transition: opacity 0.2s; }
+    .btn-send:hover { opacity: 0.85; }
+    .contact-msg { font-size: 13px; margin-top: 8px; display: none; }
+    .contact-msg.success { color: #4ade80; display: block; }
+    .contact-msg.error { color: #ff6b6b; display: block; }
+
+    .modal-close { position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--gray-2); cursor: pointer; font-size: 20px; line-height: 1; }
+
+    @media (max-width: 700px) {
+      nav { padding: 16px 20px; }
+      .main { padding: 32px 20px; }
+      .page-header { flex-direction: column; align-items: flex-start; }
+      .members-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="nav-logo">
+      <svg viewBox="0 0 629.36 216.06" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="526.76 203.06 527.86 201.96 527.86 131.95 582.65 202.02 583.69 203.06 600.13 203.06 601.17 202.02 601.17 101.52 600.07 100.42 584.68 100.42 583.58 101.52 583.58 171.53 527.63 101.51 526.53 100.42 511.37 100.42 510.27 101.52 510.27 202.02 511.31 203.06 526.76 203.06"/>
+        <polygon points="210.94 115.99 251.12 64.16 212.05 13 233.95 13 262.17 49.9 290.76 13 312.69 13 273.32 64.5 312.68 115.99 290.76 115.99 262.37 78.84 233.97 115.99 210.94 115.99"/>
+        <polygon points="498.96 186.23 484.97 203.05 429.99 203.05 428.89 201.95 428.89 101.16 429.99 100.06 493.77 100.06 494.87 101.16 494.87 117.28 493.77 118.38 447.22 118.38 447.22 142.94 484.24 142.94 485.34 144.04 485.34 160.17 484.24 161.27 447.22 161.27 447.22 184.73 498.17 184.73 498.96 186.23"/>
+        <path d="M369.15,57.72v-26.2h33.36l-15.03-18.33h-64.51l-1.1,1.1v16.13l1.1,1.1h27.49v68.18c-21.85,4.27-37.9,23.65-40.32,45.45H14.66V0H0v159.07h310.86c10.92,71.81,113.25,53.99,103.37-16.86h-36.29l-12.1,18.33h29.32c-6.78,27.96-40.54,38.19-59.25,14.17-27.88-35.78,20.13-81.84,52.91-47.22l10.45-13.09c-6.83-9.84-19.12-13.28-30.14-15.93v-26.82h245.56v144.42h14.66V57.72h-260.22Z"/>
+        <polygon points="205.79 99.18 191.8 116 136.82 116 135.72 114.9 135.72 14.11 136.82 13.01 200.6 13.01 201.7 14.11 201.7 30.23 200.6 31.33 154.05 31.33 154.05 55.89 191.07 55.89 192.17 56.99 192.17 73.12 191.07 74.22 154.05 74.22 154.05 97.68 205 97.68 205.79 99.18"/>
+        <polygon points="44.75 116 45.85 114.89 45.85 44.64 100.83 114.95 101.87 116 118.37 116 120.41 114.95 120.41 14.11 118.31 13.01 102.86 13.01 101.76 14.11 101.76 84.36 45.62 14.1 44.51 13.01 29.3 13.01 28.19 14.11 28.19 114.95 29.24 116 44.75 116"/>
+      </svg>
+    </a>
+    <div class="nav-links">
+      <a href="community.html" class="nav-link active">Community</a>
+      <a href="profile.html" class="nav-link">Il mio profilo</a>
+      <a href="dashboard.html" class="nav-link">Biglietti</a>
+      <a href="index.html" class="btn-sm">Home</a>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h1>La community</h1>
+        <p id="member-count">Caricamento...</p>
+      </div>
+      <a href="profile.html" class="btn-sm" style="flex-shrink:0;">Modifica il tuo profilo →</a>
+    </div>
+
+    <div class="filters">
+      <div class="search-wrap">
+        <span class="search-icon">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.3"/><path d="M10 10L12.5 12.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        </span>
+        <input type="text" id="search-input" placeholder="Cerca per nome, azienda, skill..." oninput="filterMembers()" />
+      </div>
+      <select class="filter-select" id="sector-filter" onchange="filterMembers()">
+        <option value="">Tutti i settori</option>
+        <option>Tech & Software</option>
+        <option>Marketing & Comunicazione</option>
+        <option>Design & Creatività</option>
+        <option>Finance & Consulenza</option>
+        <option>Manifattura & Produzione</option>
+        <option>Retail & E-commerce</option>
+        <option>Salute & Benessere</option>
+        <option>Educazione & Formazione</option>
+        <option>Immobiliare</option>
+        <option>Hospitality & Food</option>
+        <option>Legale</option>
+        <option>Altro</option>
+      </select>
+      <span class="results-count" id="results-count"></span>
+    </div>
+
+    <div class="members-grid" id="members-grid">
+      <div style="color:var(--gray-3);font-size:14px;padding:40px 0;grid-column:1/-1;">Caricamento...</div>
+    </div>
+  </main>
+
+  <!-- MODAL PROFILO -->
+  <div class="modal-overlay" id="profile-modal" onclick="closeModal(event)">
+    <div class="modal" style="position:relative;">
+      <button class="modal-close" onclick="closeProfileModal()">×</button>
+      <div class="modal-header" id="modal-header"></div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://gafmqwiympfzervppqvi.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhZm1xd2l5bXBmemVydnBwcXZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MTQ1NTIsImV4cCI6MjA5MTk5MDU1Mn0.7xDiXBLf_Zf85hNP0Zq1nQXsX0Vz7dRkE8XROafRpII';
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let allMembers = [];
+    let currentUser = null;
+
+    async function init() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) return window.location.href = 'login.html';
+      currentUser = session.user;
+      await loadMembers();
+    }
+
+    async function loadMembers() {
+      const { data, error } = await sb.from('community_directory').select('*').order('created_at', { ascending: false });
+      allMembers = data || [];
+      document.getElementById('member-count').textContent = `${allMembers.length} member${allMembers.length !== 1 ? 'i' : 'o'} nella community`;
+      renderMembers(allMembers);
+    }
+
+    function renderMembers(members) {
+      const grid = document.getElementById('members-grid');
+      document.getElementById('results-count').textContent = members.length + ' risultati';
+
+      if (!members.length) {
+        grid.innerHTML = '<div class="empty"><p>Nessun membro trovato.</p><small>Prova a cambiare i filtri di ricerca.</small></div>';
+        return;
+      }
+
+      grid.innerHTML = members.map(m => {
+        const initials = (m.full_name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+        const avatarHtml = m.avatar_url
+          ? `<img src="${m.avatar_url}" alt="${m.full_name}">`
+          : initials;
+        const skillsHtml = (m.skills || []).slice(0, 3).map(s => `<span class="skill-chip">${s}</span>`).join('');
+        const role = [m.role, m.company].filter(Boolean).join(' @ ');
+        return `
+          <div class="member-card" onclick="openMemberModal('${m.id}')">
+            <div class="card-top">
+              <div class="member-avatar">${avatarHtml}</div>
+              <div>
+                <div class="member-name">${m.full_name || '—'}</div>
+                <div class="member-role">${role || '—'}</div>
+              </div>
+            </div>
+            ${m.bio ? `<div class="member-bio">${m.bio}</div>` : ''}
+            ${skillsHtml ? `<div class="member-skills">${skillsHtml}</div>` : ''}
+            <div class="card-footer">
+              <span class="member-sector">${m.sector || ''}</span>
+              <span class="member-location">${m.location || ''}</span>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function filterMembers() {
+      const q = document.getElementById('search-input').value.toLowerCase();
+      const sector = document.getElementById('sector-filter').value;
+      const filtered = allMembers.filter(m => {
+        const matchQ = !q ||
+          (m.full_name || '').toLowerCase().includes(q) ||
+          (m.company || '').toLowerCase().includes(q) ||
+          (m.role || '').toLowerCase().includes(q) ||
+          (m.skills || []).some(s => s.toLowerCase().includes(q));
+        const matchSector = !sector || m.sector === sector;
+        return matchQ && matchSector;
+      });
+      renderMembers(filtered);
+    }
+
+    async function openMemberModal(userId) {
+      const { data: member } = await sb.from('community_directory').select('*').eq('id', userId).single();
+      if (!member) return;
+
+      const initials = (member.full_name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      const avatarHtml = member.avatar_url ? `<img src="${member.avatar_url}" alt="">` : initials;
+      const role = [member.role, member.company].filter(Boolean).join(' @ ');
+
+      const links = [];
+      if (member.website) links.push(`<a href="${member.website}" target="_blank" class="modal-link">Sito web</a>`);
+      if (member.linkedin) links.push(`<a href="${member.linkedin}" target="_blank" class="modal-link">LinkedIn</a>`);
+
+      document.getElementById('modal-header').innerHTML = `
+        <div class="modal-avatar">${avatarHtml}</div>
+        <div>
+          <div class="modal-name">${member.full_name || '—'}</div>
+          <div class="modal-role">${role || '—'} ${member.location ? '· ' + member.location : ''}</div>
+          <div class="modal-links">${links.join('')}</div>
+        </div>`;
+
+      const skillsHtml = (member.skills || []).map(s => `<span class="modal-skill">${s}</span>`).join('');
+
+      document.getElementById('modal-body').innerHTML = `
+        ${member.bio ? `<div class="modal-section"><div class="modal-section-title">Bio</div><div class="modal-bio">${member.bio}</div></div>` : ''}
+        ${skillsHtml ? `<div class="modal-section"><div class="modal-section-title">Skills</div><div class="modal-skills">${skillsHtml}</div></div>` : ''}
+        <div class="modal-section">
+          <div class="modal-section-title">Contatta ${member.full_name?.split(' ')[0] || 'questo membro'}</div>
+          <div class="contact-form">
+            <input type="text" id="c-name" placeholder="Il tuo nome" />
+            <input type="email" id="c-email" placeholder="La tua email" />
+            <textarea id="c-message" placeholder="Scrivi un messaggio..."></textarea>
+            <button class="btn-send" onclick="sendMessage('${userId}')">Invia messaggio</button>
+            <div class="contact-msg" id="contact-msg"></div>
+          </div>
+        </div>`;
+
+      document.getElementById('profile-modal').classList.add('open');
+    }
+
+    async function sendMessage(recipientId) {
+      const name = document.getElementById('c-name').value;
+      const email = document.getElementById('c-email').value;
+      const message = document.getElementById('c-message').value;
+      const msgEl = document.getElementById('contact-msg');
+
+      if (!name || !email || !message) {
+        msgEl.textContent = 'Compila tutti i campi.';
+        msgEl.className = 'contact-msg error';
+        return;
+      }
+
+      const { error } = await sb.from('messages').insert({ recipient_id: recipientId, sender_name: name, sender_email: email, message });
+      if (error) {
+        msgEl.textContent = 'Errore nell\'invio. Riprova.';
+        msgEl.className = 'contact-msg error';
+        return;
+      }
+
+      msgEl.textContent = 'Messaggio inviato!';
+      msgEl.className = 'contact-msg success';
+      document.getElementById('c-name').value = '';
+      document.getElementById('c-email').value = '';
+      document.getElementById('c-message').value = '';
+    }
+
+    function closeModal(e) { if (e.target === document.getElementById('profile-modal')) closeProfileModal(); }
+    function closeProfileModal() { document.getElementById('profile-modal').classList.remove('open'); }
+
+    init();
+  </script>
+</body>
+</html>
