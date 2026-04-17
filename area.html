@@ -443,6 +443,7 @@
                   <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Stato</th>
                   <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Data</th>
                   <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Check-in</th>
+                  <th style="padding:10px 14px;"></th>
                 </tr>
               </thead>
               <tbody id="attendees-table-body"></tbody>
@@ -663,6 +664,7 @@
           <td style="padding:12px 14px;">${statusMap[t.status] || t.status}</td>
           <td style="padding:12px 14px;color:var(--gray-2);">${date}</td>
           <td style="padding:12px 14px;">${checkin}</td>
+          <td style="padding:12px 14px;"><button onclick="removeAttendee('${t.id}')" style="font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;background:transparent;color:#ff6b6b;border:1px solid rgba(220,50,50,0.3);padding:4px 8px;border-radius:3px;cursor:pointer;">Rimuovi</button></td>
         </tr>`;
       }).join('');
     }
@@ -701,7 +703,18 @@
       URL.revokeObjectURL(url);
     }
 
-    function closeAttendees() {
+    async function removeAttendee(ticketId) {
+      if (!confirm('Sei sicuro di voler rimuovere questo iscritto?')) return;
+      const ticket = allAttendees.find(t => t.id === ticketId);
+      const { error } = await sb.from('tickets').delete().eq('id', ticketId);
+      if (error) return alert('Errore: ' + error.message);
+      if (ticket?.status === 'confirmed') {
+        await sb.rpc('decrement_tickets_sold', { event_id: currentEventForAttendees });
+      }
+      allAttendees = allAttendees.filter(t => t.id !== ticketId);
+      renderAttendees();
+      loadAdminEvents();
+    }
       document.getElementById('admin-attendees-section').style.display = 'none';
       currentEventForAttendees = null;
       allAttendees = [];
