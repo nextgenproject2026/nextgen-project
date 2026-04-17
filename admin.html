@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — NextGen</title>
+  <link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0a; --bg-2: #111111; --bg-3: #1a1a1a;
+      --white: #ffffff; --gray-1: #e8e8e8; --gray-2: #a0a0a0; --gray-3: #444444;
+      --border: rgba(255,255,255,0.1); --font: 'Satoshi', sans-serif;
+    }
+    body { font-family: var(--font); background: var(--bg); color: var(--white); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+    /* NAV */
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 20px 48px; border-bottom: 1px solid var(--border); }
+    .nav-logo svg { width: 100px; }
+    .nav-logo svg polygon, .nav-logo svg path { fill: var(--white); }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .admin-badge { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 2px; color: var(--gray-2); }
+    .btn-sm { font-family: var(--font); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: transparent; color: var(--gray-2); border: 1px solid var(--border); padding: 8px 14px; border-radius: 4px; cursor: pointer; transition: color 0.2s; }
+    .btn-sm:hover { color: var(--white); }
+
+    /* LAYOUT */
+    .layout { display: grid; grid-template-columns: 200px 1fr; min-height: calc(100vh - 65px); }
+    .sidebar { border-right: 1px solid var(--border); padding: 32px 24px; }
+    .sidebar-item { display: block; font-size: 13px; font-weight: 700; color: var(--gray-2); text-decoration: none; padding: 10px 12px; border-radius: 4px; margin-bottom: 4px; cursor: pointer; background: none; border: none; width: 100%; text-align: left; transition: background 0.15s, color 0.15s; }
+    .sidebar-item:hover, .sidebar-item.active { background: var(--bg-3); color: var(--white); }
+    .content { padding: 48px; }
+
+    /* VIEWS */
+    .view { display: none; }
+    .view.active { display: block; }
+    .view-title { font-size: 28px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 8px; }
+    .view-sub { font-size: 14px; color: var(--gray-2); margin-bottom: 36px; }
+
+    /* STATS */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 48px; }
+    .stat-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; padding: 20px 24px; }
+    .stat-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray-3); margin-bottom: 8px; }
+    .stat-value { font-size: 32px; font-weight: 900; letter-spacing: -0.03em; }
+
+    /* FORM */
+    .form-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; padding: 32px; max-width: 640px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { margin-bottom: 0; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray-3); display: block; margin-bottom: 6px; }
+    input, textarea, select { font-family: var(--font); font-size: 14px; width: 100%; background: var(--bg-3); border: 1px solid var(--border); color: var(--white); padding: 10px 14px; border-radius: 4px; outline: none; transition: border-color 0.2s; }
+    textarea { resize: vertical; min-height: 80px; }
+    select option { background: var(--bg-3); }
+    input:focus, textarea:focus, select:focus { border-color: rgba(255,255,255,0.3); }
+    .form-hint { font-size: 11px; color: var(--gray-3); margin-top: 4px; }
+    .btn-primary { font-family: var(--font); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: var(--white); color: var(--bg); border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; margin-top: 24px; transition: opacity 0.2s; }
+    .btn-primary:hover { opacity: 0.85; }
+    .form-msg { font-size: 13px; margin-top: 12px; display: none; }
+    .form-msg.success { color: #4ade80; display: block; }
+    .form-msg.error { color: #ff6b6b; display: block; }
+
+    /* TABLES */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray-3); padding: 12px 16px; border-bottom: 1px solid var(--border); text-align: left; }
+    td { padding: 14px 16px; border-bottom: 1px solid var(--border); color: var(--gray-1); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg-2); }
+    .badge { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 2px; }
+    .badge.confirmed { background: rgba(50,200,100,0.15); color: #4ade80; }
+    .badge.pending { background: rgba(250,180,50,0.15); color: #fbbf24; }
+    .badge.published { background: rgba(50,200,100,0.15); color: #4ade80; }
+    .badge.draft { background: rgba(255,255,255,0.08); color: var(--gray-2); }
+    .action-btn { font-family: var(--font); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: transparent; border: 1px solid var(--border); color: var(--gray-2); padding: 5px 10px; border-radius: 3px; cursor: pointer; transition: color 0.2s; }
+    .action-btn:hover { color: var(--white); border-color: rgba(255,255,255,0.3); }
+    .action-btn.danger:hover { color: #ff6b6b; border-color: rgba(220,50,50,0.4); }
+    .empty-row td { color: var(--gray-3); text-align: center; padding: 40px; }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { display: flex; gap: 8px; padding: 16px 20px; border-right: none; border-bottom: 1px solid var(--border); overflow-x: auto; }
+      .sidebar-item { white-space: nowrap; }
+      .content { padding: 24px 20px; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="nav-logo">
+      <svg viewBox="0 0 629.36 216.06" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="526.76 203.06 527.86 201.96 527.86 131.95 582.65 202.02 583.69 203.06 600.13 203.06 601.17 202.02 601.17 101.52 600.07 100.42 584.68 100.42 583.58 101.52 583.58 171.53 527.63 101.51 526.53 100.42 511.37 100.42 510.27 101.52 510.27 202.02 511.31 203.06 526.76 203.06"/>
+        <polygon points="210.94 115.99 251.12 64.16 212.05 13 233.95 13 262.17 49.9 290.76 13 312.69 13 273.32 64.5 312.68 115.99 290.76 115.99 262.37 78.84 233.97 115.99 210.94 115.99"/>
+        <polygon points="498.96 186.23 484.97 203.05 429.99 203.05 428.89 201.95 428.89 101.16 429.99 100.06 493.77 100.06 494.87 101.16 494.87 117.28 493.77 118.38 447.22 118.38 447.22 142.94 484.24 142.94 485.34 144.04 485.34 160.17 484.24 161.27 447.22 161.27 447.22 184.73 498.17 184.73 498.96 186.23"/>
+        <path d="M369.15,57.72v-26.2h33.36l-15.03-18.33h-64.51l-1.1,1.1v16.13l1.1,1.1h27.49v68.18c-21.85,4.27-37.9,23.65-40.32,45.45H14.66V0H0v159.07h310.86c10.92,71.81,113.25,53.99,103.37-16.86h-36.29l-12.1,18.33h29.32c-6.78,27.96-40.54,38.19-59.25,14.17-27.88-35.78,20.13-81.84,52.91-47.22l10.45-13.09c-6.83-9.84-19.12-13.28-30.14-15.93v-26.82h245.56v144.42h14.66V57.72h-260.22Z"/>
+        <polygon points="205.79 99.18 191.8 116 136.82 116 135.72 114.9 135.72 14.11 136.82 13.01 200.6 13.01 201.7 14.11 201.7 30.23 200.6 31.33 154.05 31.33 154.05 55.89 191.07 55.89 192.17 56.99 192.17 73.12 191.07 74.22 154.05 74.22 154.05 97.68 205 97.68 205.79 99.18"/>
+        <polygon points="44.75 116 45.85 114.89 45.85 44.64 100.83 114.95 101.87 116 118.37 116 120.41 114.95 120.41 14.11 118.31 13.01 102.86 13.01 101.76 14.11 101.76 84.36 45.62 14.1 44.51 13.01 29.3 13.01 28.19 14.11 28.19 114.95 29.24 116 44.75 116"/>
+      </svg>
+    </a>
+    <div class="nav-right">
+      <span class="admin-badge">Admin</span>
+      <button class="btn-sm" onclick="handleLogout()">Esci</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <div class="sidebar">
+      <button class="sidebar-item active" onclick="showView('overview')">Panoramica</button>
+      <button class="sidebar-item" onclick="showView('create-event')">Crea evento</button>
+      <button class="sidebar-item" onclick="showView('events-list')">Gestisci eventi</button>
+      <button class="sidebar-item" onclick="showView('tickets-list')">Biglietti</button>
+      <button class="sidebar-item" onclick="showView('users-list')">Utenti</button>
+    </div>
+
+    <div class="content">
+
+      <!-- OVERVIEW -->
+      <div class="view active" id="view-overview">
+        <div class="view-title">Panoramica</div>
+        <p class="view-sub">Riepilogo attività NextGen.</p>
+        <div class="stats-grid" id="stats-grid">
+          <div class="stat-card"><div class="stat-label">Eventi totali</div><div class="stat-value" id="stat-events">—</div></div>
+          <div class="stat-card"><div class="stat-label">Biglietti venduti</div><div class="stat-value" id="stat-tickets">—</div></div>
+          <div class="stat-card"><div class="stat-label">Utenti registrati</div><div class="stat-value" id="stat-users">—</div></div>
+          <div class="stat-card"><div class="stat-label">Incasso totale</div><div class="stat-value" id="stat-revenue">—</div></div>
+        </div>
+      </div>
+
+      <!-- CREA EVENTO -->
+      <div class="view" id="view-create-event">
+        <div class="view-title">Crea evento</div>
+        <p class="view-sub">Compila i dettagli. Puoi salvare come bozza e pubblicare dopo.</p>
+        <div class="form-card">
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>Titolo evento</label>
+              <input type="text" id="ev-title" placeholder="NextGen Meetup #3" />
+            </div>
+            <div class="form-group full">
+              <label>Descrizione</label>
+              <textarea id="ev-desc" placeholder="Di cosa si tratta, chi partecipa, cosa aspettarsi..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Data e ora</label>
+              <input type="datetime-local" id="ev-date" />
+            </div>
+            <div class="form-group">
+              <label>Location</label>
+              <input type="text" id="ev-location" placeholder="Castelli in Aria, Castelfranco Veneto" />
+            </div>
+            <div class="form-group">
+              <label>Prezzo standard (€)</label>
+              <input type="number" id="ev-price-std" placeholder="10" min="0" step="0.50" />
+              <div class="form-hint">Inserisci il prezzo in euro (es. 10 = €10,00)</div>
+            </div>
+            <div class="form-group">
+              <label>Prezzo early bird (€)</label>
+              <input type="number" id="ev-price-eb" placeholder="7" min="0" step="0.50" />
+            </div>
+            <div class="form-group">
+              <label>Scadenza early bird</label>
+              <input type="datetime-local" id="ev-eb-deadline" />
+            </div>
+            <div class="form-group">
+              <label>Capienza massima</label>
+              <input type="number" id="ev-capacity" placeholder="100" min="1" />
+            </div>
+            <div class="form-group full">
+              <label>Stato</label>
+              <select id="ev-status">
+                <option value="false">Bozza (non visibile al pubblico)</option>
+                <option value="true">Pubblicato</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn-primary" onclick="createEvent()">Salva evento</button>
+          <div class="form-msg" id="event-msg"></div>
+        </div>
+      </div>
+
+      <!-- LISTA EVENTI -->
+      <div class="view" id="view-events-list">
+        <div class="view-title">Gestisci eventi</div>
+        <p class="view-sub">Tutti gli eventi creati.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Titolo</th><th>Data</th><th>Biglietti</th><th>Stato</th><th>Azioni</th></tr>
+            </thead>
+            <tbody id="events-table-body">
+              <tr><td colspan="5" style="text-align:center;color:var(--gray-3);padding:32px;">Caricamento...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- LISTA BIGLIETTI -->
+      <div class="view" id="view-tickets-list">
+        <div class="view-title">Biglietti</div>
+        <p class="view-sub">Tutti i biglietti acquistati.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Evento</th><th>Utente</th><th>Tipo</th><th>Prezzo</th><th>Stato</th><th>Data</th></tr>
+            </thead>
+            <tbody id="tickets-table-body">
+              <tr><td colspan="6" style="text-align:center;color:var(--gray-3);padding:32px;">Caricamento...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- LISTA UTENTI -->
+      <div class="view" id="view-users-list">
+        <div class="view-title">Utenti</div>
+        <p class="view-sub">Tutti gli utenti registrati.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Nome</th><th>Email</th><th>Registrato il</th><th>Admin</th></tr>
+            </thead>
+            <tbody id="users-table-body">
+              <tr><td colspan="4" style="text-align:center;color:var(--gray-3);padding:32px;">Caricamento...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'INSERISCI_QUI_SUPABASE_URL';
+    const SUPABASE_ANON_KEY = 'INSERISCI_QUI_SUPABASE_ANON_KEY';
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function init() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) return window.location.href = 'login.html';
+
+      const { data: profile } = await sb.from('profiles').select('is_admin').eq('id', session.user.id).single();
+      if (!profile?.is_admin) return window.location.href = 'dashboard.html';
+
+      loadStats();
+    }
+
+    function showView(name) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+      document.getElementById('view-' + name).classList.add('active');
+      event.target.classList.add('active');
+
+      if (name === 'events-list') loadEventsTable();
+      if (name === 'tickets-list') loadTicketsTable();
+      if (name === 'users-list') loadUsersTable();
+    }
+
+    async function loadStats() {
+      const [eventsRes, ticketsRes, usersRes, revenueRes] = await Promise.all([
+        sb.from('events').select('id', { count: 'exact' }),
+        sb.from('tickets').select('id', { count: 'exact' }).eq('status', 'confirmed'),
+        sb.from('profiles').select('id', { count: 'exact' }),
+        sb.from('tickets').select('price_paid').eq('status', 'confirmed')
+      ]);
+
+      document.getElementById('stat-events').textContent = eventsRes.count ?? '—';
+      document.getElementById('stat-tickets').textContent = ticketsRes.count ?? '—';
+      document.getElementById('stat-users').textContent = usersRes.count ?? '—';
+
+      const total = (revenueRes.data || []).reduce((sum, t) => sum + t.price_paid, 0);
+      document.getElementById('stat-revenue').textContent = (total / 100).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
+    }
+
+    async function createEvent() {
+      const title = document.getElementById('ev-title').value;
+      const desc = document.getElementById('ev-desc').value;
+      const date = document.getElementById('ev-date').value;
+      const location = document.getElementById('ev-location').value;
+      const priceStd = parseFloat(document.getElementById('ev-price-std').value) || 0;
+      const priceEb = parseFloat(document.getElementById('ev-price-eb').value) || 0;
+      const ebDeadline = document.getElementById('ev-eb-deadline').value;
+      const capacity = parseInt(document.getElementById('ev-capacity').value) || 100;
+      const published = document.getElementById('ev-status').value === 'true';
+
+      if (!title || !date) {
+        showFormMsg('event-msg', 'Titolo e data sono obbligatori.', 'error');
+        return;
+      }
+
+      const { error } = await sb.from('events').insert({
+        title, description: desc, event_date: date, location,
+        price_standard: Math.round(priceStd * 100),
+        price_early_bird: Math.round(priceEb * 100),
+        early_bird_deadline: ebDeadline || null,
+        capacity, is_published: published
+      });
+
+      if (error) return showFormMsg('event-msg', 'Errore: ' + error.message, 'error');
+      showFormMsg('event-msg', 'Evento salvato con successo.', 'success');
+      loadStats();
+    }
+
+    async function loadEventsTable() {
+      const { data } = await sb.from('events').select('*').order('event_date', { ascending: false });
+      const tbody = document.getElementById('events-table-body');
+      if (!data?.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-row">Nessun evento creato.</td></tr>'; return; }
+      tbody.innerHTML = data.map(e => `
+        <tr>
+          <td style="font-weight:700;">${e.title}</td>
+          <td>${new Date(e.event_date).toLocaleDateString('it-IT')}</td>
+          <td>${e.tickets_sold} / ${e.capacity}</td>
+          <td><span class="badge ${e.is_published ? 'published' : 'draft'}">${e.is_published ? 'Pubblicato' : 'Bozza'}</span></td>
+          <td>
+            <button class="action-btn" onclick="togglePublish('${e.id}', ${e.is_published})">${e.is_published ? 'Nascondi' : 'Pubblica'}</button>
+          </td>
+        </tr>`).join('');
+    }
+
+    async function togglePublish(id, current) {
+      await sb.from('events').update({ is_published: !current }).eq('id', id);
+      loadEventsTable();
+    }
+
+    async function loadTicketsTable() {
+      const { data } = await sb.from('tickets').select(`*, events(title), profiles(email, full_name)`).order('created_at', { ascending: false }).limit(100);
+      const tbody = document.getElementById('tickets-table-body');
+      if (!data?.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty-row">Nessun biglietto ancora.</td></tr>'; return; }
+      tbody.innerHTML = data.map(t => `
+        <tr>
+          <td>${t.events?.title || '—'}</td>
+          <td>${t.profiles?.full_name || t.profiles?.email || '—'}</td>
+          <td>${t.ticket_type === 'early_bird' ? 'Early Bird' : 'Standard'}</td>
+          <td>${(t.price_paid / 100).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}</td>
+          <td><span class="badge ${t.status}">${t.status}</span></td>
+          <td>${new Date(t.created_at).toLocaleDateString('it-IT')}</td>
+        </tr>`).join('');
+    }
+
+    async function loadUsersTable() {
+      const { data } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
+      const tbody = document.getElementById('users-table-body');
+      if (!data?.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty-row">Nessun utente ancora.</td></tr>'; return; }
+      tbody.innerHTML = data.map(u => `
+        <tr>
+          <td>${u.full_name || '—'}</td>
+          <td>${u.email}</td>
+          <td>${new Date(u.created_at).toLocaleDateString('it-IT')}</td>
+          <td>${u.is_admin ? '<span class="badge confirmed">Admin</span>' : '—'}</td>
+        </tr>`).join('');
+    }
+
+    function showFormMsg(id, text, type) {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.className = 'form-msg ' + type;
+    }
+
+    async function handleLogout() {
+      await sb.auth.signOut();
+      window.location.href = 'index.html';
+    }
+
+    init();
+  </script>
+</body>
+</html>

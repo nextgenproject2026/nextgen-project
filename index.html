@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NextGen Project</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --bg-2: #111111;
+      --bg-3: #1a1a1a;
+      --white: #ffffff;
+      --gray-1: #e8e8e8;
+      --gray-2: #a0a0a0;
+      --gray-3: #444444;
+      --gray-4: #222222;
+      --accent: #ffffff;
+      --border: rgba(255,255,255,0.1);
+      --border-hover: rgba(255,255,255,0.25);
+      --font: 'Satoshi', sans-serif;
+      --max: 1200px;
+      --radius: 4px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--white);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── NAV ─── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 48px;
+      border-bottom: 1px solid transparent;
+      transition: background 0.3s, border-color 0.3s;
+    }
+    nav.scrolled {
+      background: rgba(10,10,10,0.95);
+      backdrop-filter: blur(12px);
+      border-color: var(--border);
+    }
+    .nav-logo svg { width: 140px; height: auto; }
+    .nav-logo svg path, .nav-logo svg polygon { fill: var(--white); }
+    .nav-links { display: flex; gap: 36px; }
+    .nav-links a {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-2);
+      text-decoration: none;
+      letter-spacing: 0.03em;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--white); }
+    .nav-cta {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--bg);
+      background: var(--white);
+      text-decoration: none;
+      padding: 10px 22px;
+      border-radius: var(--radius);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      transition: opacity 0.2s;
+    }
+    .nav-cta:hover { opacity: 0.85; }
+
+    /* ─── HERO ─── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 0 48px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 70% 40%, rgba(255,255,255,0.04) 0%, transparent 70%),
+        var(--bg);
+    }
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 80px 80px;
+      mask-image: linear-gradient(to bottom, transparent 0%, black 30%, black 70%, transparent 100%);
+    }
+    .hero-content { position: relative; z-index: 2; max-width: var(--max); }
+    .hero-eyebrow {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gray-2);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      display: block;
+      width: 32px;
+      height: 1px;
+      background: var(--gray-2);
+    }
+    h1 {
+      font-size: clamp(52px, 8vw, 110px);
+      font-weight: 900;
+      line-height: 0.92;
+      letter-spacing: -0.03em;
+      margin-bottom: 40px;
+    }
+    h1 span { color: var(--gray-3); }
+    .hero-bottom {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 40px;
+    }
+    .hero-desc {
+      max-width: 480px;
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--gray-2);
+      line-height: 1.7;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .btn-primary {
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: var(--white);
+      color: var(--bg);
+      border: none;
+      padding: 14px 28px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-secondary {
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: transparent;
+      color: var(--white);
+      border: 1px solid var(--border);
+      padding: 14px 28px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color 0.2s;
+    }
+    .btn-secondary:hover { border-color: var(--border-hover); }
+
+    /* ─── TICKER ─── */
+    .ticker {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+      padding: 14px 0;
+      background: var(--bg-2);
+    }
+    .ticker-track {
+      display: flex;
+      gap: 0;
+      animation: ticker 30s linear infinite;
+      white-space: nowrap;
+    }
+    .ticker-item {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gray-3);
+      padding: 0 40px;
+      flex-shrink: 0;
+    }
+    .ticker-item span { color: var(--white); }
+    @keyframes ticker {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    /* ─── SECTIONS COMMON ─── */
+    section { padding: 120px 48px; }
+    .container { max-width: var(--max); margin: 0 auto; }
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gray-3);
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: clamp(36px, 5vw, 60px);
+      font-weight: 900;
+      letter-spacing: -0.025em;
+      line-height: 1.0;
+      margin-bottom: 24px;
+    }
+    .section-sub {
+      font-size: 17px;
+      color: var(--gray-2);
+      line-height: 1.7;
+      max-width: 560px;
+    }
+
+    /* ─── COSA È NEXTGEN ─── */
+    .about { background: var(--bg); }
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: start;
+      margin-top: 80px;
+    }
+    .about-left .big-stat {
+      font-size: 80px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      color: var(--white);
+      margin-bottom: 8px;
+    }
+    .about-left .stat-label {
+      font-size: 14px;
+      color: var(--gray-2);
+      margin-bottom: 48px;
+    }
+    .about-right p {
+      font-size: 19px;
+      line-height: 1.75;
+      color: var(--gray-1);
+      margin-bottom: 28px;
+    }
+    .about-right p:last-child { margin-bottom: 0; }
+
+    /* ─── PILLARS ─── */
+    .pillars { background: var(--bg-2); }
+    .pillars-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 64px;
+      gap: 40px;
+    }
+    .pillars-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .pillar {
+      background: var(--bg-2);
+      padding: 48px 36px;
+      transition: background 0.2s;
+    }
+    .pillar:hover { background: var(--bg-3); }
+    .pillar-num {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--gray-3);
+      margin-bottom: 32px;
+    }
+    .pillar-icon {
+      width: 40px;
+      height: 40px;
+      margin-bottom: 24px;
+    }
+    .pillar h3 {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+    .pillar p {
+      font-size: 15px;
+      color: var(--gray-2);
+      line-height: 1.7;
+    }
+
+    /* ─── COME FUNZIONA ─── */
+    .how { background: var(--bg); }
+    .how-steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      margin-top: 80px;
+      position: relative;
+    }
+    .how-steps::before {
+      content: '';
+      position: absolute;
+      top: 28px;
+      left: 10%;
+      right: 10%;
+      height: 1px;
+      background: var(--border);
+    }
+    .step {
+      padding: 0 24px;
+      position: relative;
+    }
+    .step-dot {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 900;
+      color: var(--gray-2);
+      margin-bottom: 32px;
+      position: relative;
+      z-index: 2;
+    }
+    .step:first-child .step-dot {
+      background: var(--white);
+      color: var(--bg);
+      border-color: var(--white);
+    }
+    .step h4 {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      letter-spacing: -0.01em;
+    }
+    .step p {
+      font-size: 14px;
+      color: var(--gray-2);
+      line-height: 1.65;
+    }
+
+    /* ─── EVENTI ─── */
+    .events { background: var(--bg-2); }
+    .events-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 48px;
+    }
+    .events-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .event-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .event-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-2px);
+    }
+    .event-card.featured {
+      border-color: rgba(255,255,255,0.3);
+    }
+    .event-img {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: var(--bg-3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .event-img-placeholder {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gray-3);
+    }
+    .event-badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: var(--white);
+      color: var(--bg);
+      padding: 4px 10px;
+      border-radius: 2px;
+    }
+    .event-body { padding: 24px; }
+    .event-date {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gray-2);
+      margin-bottom: 10px;
+    }
+    .event-body h3 {
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      margin-bottom: 10px;
+    }
+    .event-body p {
+      font-size: 14px;
+      color: var(--gray-2);
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .event-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+    }
+    .event-location {
+      font-size: 12px;
+      color: var(--gray-2);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .event-price {
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .events-empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 80px 40px;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+    }
+    .events-empty p {
+      font-size: 16px;
+      color: var(--gray-2);
+      margin-bottom: 24px;
+    }
+
+    /* ─── MANIFESTO ─── */
+    .manifesto {
+      background: var(--white);
+      color: var(--bg);
+      padding: 120px 48px;
+    }
+    .manifesto .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+    .manifesto .section-label { color: var(--gray-3); }
+    .manifesto .section-title { color: var(--bg); }
+    .manifesto-text {
+      font-size: 18px;
+      line-height: 1.8;
+      color: #333;
+    }
+    .manifesto-text p { margin-bottom: 24px; }
+    .manifesto-text p:last-child { margin-bottom: 0; }
+    .manifesto-values {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .value-item {
+      padding: 24px 0;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+    }
+    .value-item:first-child { border-top: 1px solid rgba(0,0,0,0.1); }
+    .value-num {
+      font-size: 11px;
+      font-weight: 700;
+      color: #aaa;
+      padding-top: 4px;
+      flex-shrink: 0;
+    }
+    .value-item h4 {
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+      color: var(--bg);
+    }
+    .value-item p {
+      font-size: 14px;
+      color: #555;
+      line-height: 1.65;
+    }
+
+    /* ─── CTA ─── */
+    .cta-section {
+      background: var(--bg);
+      padding: 160px 48px;
+      text-align: center;
+    }
+    .cta-section .section-title {
+      font-size: clamp(48px, 7vw, 90px);
+      margin: 0 auto 32px;
+      max-width: 800px;
+    }
+    .cta-section .section-sub {
+      margin: 0 auto 48px;
+      font-size: 18px;
+    }
+    .cta-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    /* ─── FOOTER ─── */
+    footer {
+      background: var(--bg-2);
+      border-top: 1px solid var(--border);
+      padding: 60px 48px;
+    }
+    .footer-inner {
+      max-width: var(--max);
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    footer .footer-logo svg { width: 100px; }
+    footer .footer-logo svg path,
+    footer .footer-logo svg polygon { fill: var(--gray-3); }
+    .footer-links {
+      display: flex;
+      gap: 28px;
+    }
+    .footer-links a {
+      font-size: 13px;
+      color: var(--gray-3);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--white); }
+    .footer-copy {
+      font-size: 12px;
+      color: var(--gray-3);
+    }
+
+    /* ─── ANIMATIONS ─── */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .fade-up.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 900px) {
+      nav { padding: 20px 24px; }
+      .nav-links { display: none; }
+      section { padding: 80px 24px; }
+      .hero { padding: 0 24px 60px; }
+      h1 { font-size: 52px; }
+      .hero-bottom { flex-direction: column; align-items: flex-start; }
+      .about-grid { grid-template-columns: 1fr; gap: 48px; }
+      .pillars-grid { grid-template-columns: 1fr; }
+      .how-steps { grid-template-columns: 1fr 1fr; }
+      .how-steps::before { display: none; }
+      .events-grid { grid-template-columns: 1fr; }
+      .manifesto .container { grid-template-columns: 1fr; gap: 48px; }
+      .footer-inner { flex-direction: column; gap: 24px; text-align: center; }
+      .manifesto { padding: 80px 24px; }
+      .cta-section { padding: 100px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav id="nav">
+    <a href="#" class="nav-logo">
+      <svg viewBox="0 0 629.36 216.06" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="526.76 203.06 527.86 201.96 527.86 131.95 582.65 202.02 583.69 203.06 600.13 203.06 601.17 202.02 601.17 101.52 600.07 100.42 584.68 100.42 583.58 101.52 583.58 171.53 527.63 101.51 526.53 100.42 511.37 100.42 510.27 101.52 510.27 202.02 511.31 203.06 526.76 203.06"/>
+        <polygon points="210.94 115.99 251.12 64.16 212.05 13 233.95 13 262.17 49.9 290.76 13 312.69 13 273.32 64.5 312.68 115.99 290.76 115.99 262.37 78.84 233.97 115.99 210.94 115.99"/>
+        <polygon points="498.96 186.23 484.97 203.05 429.99 203.05 428.89 201.95 428.89 101.16 429.99 100.06 493.77 100.06 494.87 101.16 494.87 117.28 493.77 118.38 447.22 118.38 447.22 142.94 484.24 142.94 485.34 144.04 485.34 160.17 484.24 161.27 447.22 161.27 447.22 184.73 498.17 184.73 498.96 186.23"/>
+        <path d="M369.15,57.72v-26.2h33.36l-15.03-18.33h-64.51l-1.1,1.1v16.13l1.1,1.1h27.49v68.18c-21.85,4.27-37.9,23.65-40.32,45.45H14.66V0H0v159.07h310.86c10.92,71.81,113.25,53.99,103.37-16.86h-36.29l-12.1,18.33h29.32c-6.78,27.96-40.54,38.19-59.25,14.17-27.88-35.78,20.13-81.84,52.91-47.22l10.45-13.09c-6.83-9.84-19.12-13.28-30.14-15.93v-26.82h245.56v144.42h14.66V57.72h-260.22Z"/>
+        <polygon points="205.79 99.18 191.8 116 136.82 116 135.72 114.9 135.72 14.11 136.82 13.01 200.6 13.01 201.7 14.11 201.7 30.23 200.6 31.33 154.05 31.33 154.05 55.89 191.07 55.89 192.17 56.99 192.17 73.12 191.07 74.22 154.05 74.22 154.05 97.68 205 97.68 205.79 99.18"/>
+        <polygon points="44.75 116 45.85 114.89 45.85 44.64 100.83 114.95 101.87 116 118.37 116 120.41 114.95 120.41 14.11 118.31 13.01 102.86 13.01 101.76 14.11 101.76 84.36 45.62 14.1 44.51 13.01 29.3 13.01 28.19 14.11 28.19 114.95 29.24 116 44.75 116"/>
+      </svg>
+    </a>
+    <div class="nav-links">
+      <a href="#about">Chi siamo</a>
+      <a href="#pillars">Il progetto</a>
+      <a href="#events">Eventi</a>
+      <a href="#manifesto">Manifesto</a>
+    </div>
+    <a href="#events" class="nav-cta">Prossimi eventi</a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-content">
+      <div class="hero-eyebrow fade-up">Castelfranco Veneto — Community</div>
+      <h1 class="fade-up">
+        La prossima<br>
+        <span>generazione</span><br>
+        si incontra qui.
+      </h1>
+      <div class="hero-bottom">
+        <p class="hero-desc fade-up">
+          NextGen è uno spazio per giovani professionisti, imprenditori e creativi che vogliono crescere, connettersi e costruire qualcosa che conti.
+        </p>
+        <div class="hero-actions fade-up">
+          <a href="#events" class="btn-primary">Scopri gli eventi</a>
+          <a href="#about" class="btn-secondary">Chi siamo</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TICKER -->
+  <div class="ticker">
+    <div class="ticker-track" id="ticker">
+      <span class="ticker-item">Community <span>·</span></span>
+      <span class="ticker-item">Networking <span>·</span></span>
+      <span class="ticker-item">Giovani professionisti <span>·</span></span>
+      <span class="ticker-item">Castelfranco Veneto <span>·</span></span>
+      <span class="ticker-item">Imprenditoria <span>·</span></span>
+      <span class="ticker-item">Crescita <span>·</span></span>
+      <span class="ticker-item">Connessioni reali <span>·</span></span>
+      <span class="ticker-item">Idee che diventano progetti <span>·</span></span>
+      <span class="ticker-item">Community <span>·</span></span>
+      <span class="ticker-item">Networking <span>·</span></span>
+      <span class="ticker-item">Giovani professionisti <span>·</span></span>
+      <span class="ticker-item">Castelfranco Veneto <span>·</span></span>
+      <span class="ticker-item">Imprenditoria <span>·</span></span>
+      <span class="ticker-item">Crescita <span>·</span></span>
+      <span class="ticker-item">Connessioni reali <span>·</span></span>
+      <span class="ticker-item">Idee che diventano progetti <span>·</span></span>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <section class="about" id="about">
+    <div class="container">
+      <div class="section-label fade-up">Chi siamo</div>
+      <h2 class="section-title fade-up">Non solo networking.<br>Una community vera.</h2>
+      <div class="about-grid">
+        <div class="about-left fade-up">
+          <div class="big-stat">100+</div>
+          <div class="stat-label">persone al primo meetup</div>
+          <div class="big-stat" style="margin-top: 48px;">3+</div>
+          <div class="stat-label">eventi organizzati</div>
+          <div class="big-stat" style="margin-top: 48px;">1</div>
+          <div class="stat-label">territorio, tante storie</div>
+        </div>
+        <div class="about-right fade-up">
+          <p>
+            NextGen nasce da una domanda semplice: dove si incontrano le persone under 35 che vogliono costruire qualcosa di serio nel territorio veneto?
+          </p>
+          <p>
+            Non esisteva una risposta. Così l'abbiamo creata noi. NextGen è una community di giovani professionisti, imprenditori, freelance e creativi che si ritrovano periodicamente per conoscersi, scambiare idee e creare connessioni che vanno oltre il biglietto da visita.
+          </p>
+          <p>
+            Ogni evento è un'occasione per incontrare persone reali, ascoltare storie concrete e portare a casa qualcosa di utile — che sia un contatto, una prospettiva nuova o semplicemente l'energia di sapere che non stai andando avanti da solo.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PILLARS -->
+  <section class="pillars" id="pillars">
+    <div class="container">
+      <div class="pillars-header">
+        <div>
+          <div class="section-label fade-up">Il progetto</div>
+          <h2 class="section-title fade-up">Cosa trovi<br>da NextGen</h2>
+        </div>
+        <p class="section-sub fade-up">Tre dimensioni che rendono ogni evento diverso da qualsiasi aperitivo di networking.</p>
+      </div>
+      <div class="pillars-grid">
+        <div class="pillar fade-up">
+          <div class="pillar-num">01</div>
+          <svg class="pillar-icon" viewBox="0 0 40 40" fill="none">
+            <circle cx="20" cy="20" r="19" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+            <circle cx="13" cy="17" r="3" fill="white"/>
+            <circle cx="27" cy="17" r="3" fill="white"/>
+            <circle cx="20" cy="27" r="3" fill="white"/>
+            <line x1="13" y1="17" x2="27" y2="17" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+            <line x1="13" y1="17" x2="20" y2="27" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+            <line x1="27" y1="17" x2="20" y2="27" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+          </svg>
+          <h3>Connessioni</h3>
+          <p>Persone selezionate, ambienti curati, format pensati per rompere il ghiaccio senza forzature. Le conversazioni migliori nascono quando il contesto è giusto.</p>
+        </div>
+        <div class="pillar fade-up">
+          <div class="pillar-num">02</div>
+          <svg class="pillar-icon" viewBox="0 0 40 40" fill="none">
+            <rect x="8" y="22" width="6" height="10" fill="rgba(255,255,255,0.3)"/>
+            <rect x="17" y="15" width="6" height="17" fill="rgba(255,255,255,0.6)"/>
+            <rect x="26" y="8" width="6" height="24" fill="white"/>
+          </svg>
+          <h3>Contenuto</h3>
+          <p>Ogni meetup porta una storia, un tema, uno speaker. Non lezioni frontali — conversazioni oneste su come si cresce, si sbaglia e si ricomincia nella realtà di oggi.</p>
+        </div>
+        <div class="pillar fade-up">
+          <div class="pillar-num">03</div>
+          <svg class="pillar-icon" viewBox="0 0 40 40" fill="none">
+            <path d="M20 8 L32 28 L8 28 Z" stroke="white" stroke-width="1.5" fill="none"/>
+            <path d="M20 14 L28 28 L12 28 Z" fill="rgba(255,255,255,0.15)"/>
+          </svg>
+          <h3>Comunità</h3>
+          <p>Non un evento, ma un ecosistema che cresce. Chi viene una volta tende a tornare — perché il valore vero si costruisce nel tempo, non in una serata.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COME FUNZIONA -->
+  <section class="how">
+    <div class="container">
+      <div class="section-label fade-up">Come funziona</div>
+      <h2 class="section-title fade-up">Un format semplice,<br>pensato per funzionare.</h2>
+      <div class="how-steps">
+        <div class="step fade-up">
+          <div class="step-dot">01</div>
+          <h4>Prenota il tuo posto</h4>
+          <p>I posti sono limitati. Ogni evento ha un numero chiuso per garantire qualità delle connessioni, non quantità.</p>
+        </div>
+        <div class="step fade-up">
+          <div class="step-dot">02</div>
+          <h4>Vieni all'evento</h4>
+          <p>Location curata, aperitivo incluso, format strutturato per facilitare le presentazioni senza forzare niente.</p>
+        </div>
+        <div class="step fade-up">
+          <div class="step-dot">03</div>
+          <h4>Conosci le persone</h4>
+          <p>Speaker, discussioni, momenti liberi. Ogni evento è diverso, ma l'obiettivo è sempre lo stesso: connessioni reali.</p>
+        </div>
+        <div class="step fade-up">
+          <div class="step-dot">04</div>
+          <h4>Resta nella community</h4>
+          <p>Dopo ogni evento, la community continua. Canali dedicati, aggiornamenti sui prossimi appuntamenti, collaborazioni che nascono.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EVENTI -->
+  <section class="events" id="events">
+    <div class="container">
+      <div class="events-header">
+        <div>
+          <div class="section-label fade-up">Prossimi eventi</div>
+          <h2 class="section-title fade-up">Dove ci troviamo</h2>
+        </div>
+        <a href="#" class="btn-secondary fade-up" style="flex-shrink:0;">Tutti gli eventi →</a>
+      </div>
+
+      <!-- STATO: nessun evento in programma -->
+      <!-- Quando hai eventi, sostituisci questo blocco con le card -->
+      <div class="events-grid">
+        <div class="events-empty fade-up">
+          <p>Nessun evento in programma al momento.<br>Seguici su Instagram per non perdere i prossimi annunci.</p>
+          <a href="https://www.instagram.com/nextgenproject_/" target="_blank" class="btn-primary">Seguici su Instagram</a>
+        </div>
+      </div>
+
+      <!-- TEMPLATE CARD EVENTO (commentato, da usare quando ci sono eventi) -->
+      <!--
+      <div class="events-grid">
+        <a href="#" class="event-card featured">
+          <div class="event-img">
+            <span class="event-img-placeholder">Cover evento</span>
+            <span class="event-badge">Prossimo</span>
+          </div>
+          <div class="event-body">
+            <div class="event-date">Gio 15 Maggio 2025 · 21:00</div>
+            <h3>NextGen Meetup #2</h3>
+            <p>Il secondo appuntamento della community. Speaker, networking e tante novità.</p>
+            <div class="event-meta">
+              <span class="event-location">📍 Castelfranco Veneto</span>
+              <span class="event-price">€10</span>
+            </div>
+          </div>
+        </a>
+      </div>
+      -->
+
+    </div>
+  </section>
+
+  <!-- MANIFESTO -->
+  <section class="manifesto" id="manifesto">
+    <div class="container">
+      <div>
+        <div class="section-label fade-up">Il manifesto</div>
+        <h2 class="section-title fade-up">Perché lo facciamo.</h2>
+        <div class="manifesto-text fade-up">
+          <p>
+            Crediamo che il territorio abbia talento da vendere. Che ci siano persone straordinarie che lavorano, creano e costruiscono a 20 chilometri l'una dall'altra senza mai incrociarsi.
+          </p>
+          <p>
+            NextGen esiste per cambiare questa cosa. Un incontro alla volta.
+          </p>
+        </div>
+      </div>
+      <div class="manifesto-values fade-up">
+        <div class="value-item">
+          <span class="value-num">01</span>
+          <div>
+            <h4>Qualità sulle quantità</h4>
+            <p>Meno posti, più connessioni significative. Preferiamo 80 persone che si parlano davvero a 300 che si ignorano.</p>
+          </div>
+        </div>
+        <div class="value-item">
+          <span class="value-num">02</span>
+          <div>
+            <h4>Territorio come vantaggio</h4>
+            <p>Non dobbiamo andare a Milano per trovare persone interessanti. Sono qui. Dobbiamo solo incontrarci.</p>
+          </div>
+        </div>
+        <div class="value-item">
+          <span class="value-num">03</span>
+          <div>
+            <h4>Onestà sopra tutto</h4>
+            <p>Nessun palco perfetto, nessuna storia levigata. Solo persone reali che raccontano com'è andata davvero.</p>
+          </div>
+        </div>
+        <div class="value-item">
+          <span class="value-num">04</span>
+          <div>
+            <h4>Costruire insieme</h4>
+            <p>NextGen non è uno show. È uno spazio condiviso. Cresce con chi ci partecipa, non per chi lo organizza.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="container" style="display:flex;flex-direction:column;align-items:center;">
+      <div class="section-label fade-up">Unisciti</div>
+      <h2 class="section-title fade-up">Pronto a fare<br>parte di NextGen?</h2>
+      <p class="section-sub fade-up" style="text-align:center;">
+        I prossimi eventi vengono annunciati prima su Instagram. Seguici per non perdere i biglietti.
+      </p>
+      <div class="cta-actions fade-up">
+        <a href="https://www.instagram.com/nextgenproject_/" target="_blank" class="btn-primary">Seguici su Instagram</a>
+        <a href="#events" class="btn-secondary">Prossimi eventi</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <a href="#" class="footer-logo">
+        <svg viewBox="0 0 629.36 216.06" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="526.76 203.06 527.86 201.96 527.86 131.95 582.65 202.02 583.69 203.06 600.13 203.06 601.17 202.02 601.17 101.52 600.07 100.42 584.68 100.42 583.58 101.52 583.58 171.53 527.63 101.51 526.53 100.42 511.37 100.42 510.27 101.52 510.27 202.02 511.31 203.06 526.76 203.06"/>
+          <polygon points="210.94 115.99 251.12 64.16 212.05 13 233.95 13 262.17 49.9 290.76 13 312.69 13 273.32 64.5 312.68 115.99 290.76 115.99 262.37 78.84 233.97 115.99 210.94 115.99"/>
+          <polygon points="498.96 186.23 484.97 203.05 429.99 203.05 428.89 201.95 428.89 101.16 429.99 100.06 493.77 100.06 494.87 101.16 494.87 117.28 493.77 118.38 447.22 118.38 447.22 142.94 484.24 142.94 485.34 144.04 485.34 160.17 484.24 161.27 447.22 161.27 447.22 184.73 498.17 184.73 498.96 186.23"/>
+          <path d="M369.15,57.72v-26.2h33.36l-15.03-18.33h-64.51l-1.1,1.1v16.13l1.1,1.1h27.49v68.18c-21.85,4.27-37.9,23.65-40.32,45.45H14.66V0H0v159.07h310.86c10.92,71.81,113.25,53.99,103.37-16.86h-36.29l-12.1,18.33h29.32c-6.78,27.96-40.54,38.19-59.25,14.17-27.88-35.78,20.13-81.84,52.91-47.22l10.45-13.09c-6.83-9.84-19.12-13.28-30.14-15.93v-26.82h245.56v144.42h14.66V57.72h-260.22Z"/>
+          <polygon points="205.79 99.18 191.8 116 136.82 116 135.72 114.9 135.72 14.11 136.82 13.01 200.6 13.01 201.7 14.11 201.7 30.23 200.6 31.33 154.05 31.33 154.05 55.89 191.07 55.89 192.17 56.99 192.17 73.12 191.07 74.22 154.05 74.22 154.05 97.68 205 97.68 205.79 99.18"/>
+          <polygon points="44.75 116 45.85 114.89 45.85 44.64 100.83 114.95 101.87 116 118.37 116 120.41 114.95 120.41 14.11 118.31 13.01 102.86 13.01 101.76 14.11 101.76 84.36 45.62 14.1 44.51 13.01 29.3 13.01 28.19 14.11 28.19 114.95 29.24 116 44.75 116"/>
+        </svg>
+      </a>
+      <div class="footer-links">
+        <a href="https://www.instagram.com/nextgenproject_/" target="_blank">Instagram</a>
+        <a href="#events">Eventi</a>
+        <a href="#about">Chi siamo</a>
+        <a href="#manifesto">Manifesto</a>
+      </div>
+      <span class="footer-copy">© 2025 NextGen Project</span>
+    </div>
+  </footer>
+
+  <script>
+    // Nav scroll
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 40);
+    });
+
+    // Fade up on scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((e, i) => {
+        if (e.isIntersecting) {
+          setTimeout(() => e.target.classList.add('visible'), i * 80);
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+  </script>
+
+</body>
+</html>

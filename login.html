@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Accedi — NextGen</title>
+  <link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0a; --bg-2: #111111; --bg-3: #1a1a1a;
+      --white: #ffffff; --gray-1: #e8e8e8; --gray-2: #a0a0a0; --gray-3: #444444;
+      --border: rgba(255,255,255,0.1); --font: 'Satoshi', sans-serif;
+    }
+    body { font-family: var(--font); background: var(--bg); color: var(--white); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; -webkit-font-smoothing: antialiased; }
+    .card { width: 100%; max-width: 420px; }
+    .logo { margin-bottom: 48px; }
+    .logo svg { width: 120px; }
+    .logo svg polygon, .logo svg path { fill: var(--white); }
+    h1 { font-size: 28px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 8px; }
+    .subtitle { font-size: 15px; color: var(--gray-2); margin-bottom: 40px; }
+    .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 32px; }
+    .tab { font-family: var(--font); font-size: 14px; font-weight: 700; color: var(--gray-2); background: none; border: none; padding: 12px 0; margin-right: 28px; cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.2s, border-color 0.2s; }
+    .tab.active { color: var(--white); border-bottom-color: var(--white); }
+    .form { display: flex; flex-direction: column; gap: 16px; }
+    .form.hidden { display: none; }
+    label { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray-2); display: block; margin-bottom: 6px; }
+    input { font-family: var(--font); font-size: 15px; width: 100%; background: var(--bg-2); border: 1px solid var(--border); color: var(--white); padding: 12px 16px; border-radius: 4px; outline: none; transition: border-color 0.2s; }
+    input:focus { border-color: rgba(255,255,255,0.35); }
+    input::placeholder { color: var(--gray-3); }
+    .btn { font-family: var(--font); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: var(--white); color: var(--bg); border: none; padding: 14px; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 8px; transition: opacity 0.2s; }
+    .btn:hover { opacity: 0.85; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .msg { font-size: 14px; padding: 12px 16px; border-radius: 4px; margin-top: 8px; display: none; }
+    .msg.error { background: rgba(220,50,50,0.15); border: 1px solid rgba(220,50,50,0.3); color: #ff6b6b; display: block; }
+    .msg.success { background: rgba(50,200,100,0.15); border: 1px solid rgba(50,200,100,0.3); color: #4ade80; display: block; }
+    .divider { text-align: center; font-size: 12px; color: var(--gray-3); margin: 8px 0; }
+    .back { display: inline-block; margin-top: 32px; font-size: 13px; color: var(--gray-2); text-decoration: none; transition: color 0.2s; }
+    .back:hover { color: var(--white); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <a href="index.html">
+        <svg viewBox="0 0 629.36 216.06" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="526.76 203.06 527.86 201.96 527.86 131.95 582.65 202.02 583.69 203.06 600.13 203.06 601.17 202.02 601.17 101.52 600.07 100.42 584.68 100.42 583.58 101.52 583.58 171.53 527.63 101.51 526.53 100.42 511.37 100.42 510.27 101.52 510.27 202.02 511.31 203.06 526.76 203.06"/>
+          <polygon points="210.94 115.99 251.12 64.16 212.05 13 233.95 13 262.17 49.9 290.76 13 312.69 13 273.32 64.5 312.68 115.99 290.76 115.99 262.37 78.84 233.97 115.99 210.94 115.99"/>
+          <polygon points="498.96 186.23 484.97 203.05 429.99 203.05 428.89 201.95 428.89 101.16 429.99 100.06 493.77 100.06 494.87 101.16 494.87 117.28 493.77 118.38 447.22 118.38 447.22 142.94 484.24 142.94 485.34 144.04 485.34 160.17 484.24 161.27 447.22 161.27 447.22 184.73 498.17 184.73 498.96 186.23"/>
+          <path d="M369.15,57.72v-26.2h33.36l-15.03-18.33h-64.51l-1.1,1.1v16.13l1.1,1.1h27.49v68.18c-21.85,4.27-37.9,23.65-40.32,45.45H14.66V0H0v159.07h310.86c10.92,71.81,113.25,53.99,103.37-16.86h-36.29l-12.1,18.33h29.32c-6.78,27.96-40.54,38.19-59.25,14.17-27.88-35.78,20.13-81.84,52.91-47.22l10.45-13.09c-6.83-9.84-19.12-13.28-30.14-15.93v-26.82h245.56v144.42h14.66V57.72h-260.22Z"/>
+          <polygon points="205.79 99.18 191.8 116 136.82 116 135.72 114.9 135.72 14.11 136.82 13.01 200.6 13.01 201.7 14.11 201.7 30.23 200.6 31.33 154.05 31.33 154.05 55.89 191.07 55.89 192.17 56.99 192.17 73.12 191.07 74.22 154.05 74.22 154.05 97.68 205 97.68 205.79 99.18"/>
+          <polygon points="44.75 116 45.85 114.89 45.85 44.64 100.83 114.95 101.87 116 118.37 116 120.41 114.95 120.41 14.11 118.31 13.01 102.86 13.01 101.76 14.11 101.76 84.36 45.62 14.1 44.51 13.01 29.3 13.01 28.19 14.11 28.19 114.95 29.24 116 44.75 116"/>
+        </svg>
+      </a>
+    </div>
+
+    <h1>Bentornato.</h1>
+    <p class="subtitle">Accedi o crea il tuo account per comprare i biglietti e gestire il profilo.</p>
+
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('login')">Accedi</button>
+      <button class="tab" onclick="showTab('register')">Registrati</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="form" id="form-login">
+      <div>
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="tua@email.com" />
+      </div>
+      <div>
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••" />
+      </div>
+      <button class="btn" onclick="handleLogin()">Accedi</button>
+      <div class="divider">oppure</div>
+      <button class="btn" style="background:transparent;color:var(--white);border:1px solid var(--border);" onclick="handleMagicLink()">Accedi con Magic Link</button>
+      <div class="msg" id="login-msg"></div>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="form hidden" id="form-register">
+      <div>
+        <label>Nome completo</label>
+        <input type="text" id="reg-name" placeholder="Mario Rossi" />
+      </div>
+      <div>
+        <label>Email</label>
+        <input type="email" id="reg-email" placeholder="tua@email.com" />
+      </div>
+      <div>
+        <label>Password</label>
+        <input type="password" id="reg-password" placeholder="Min. 8 caratteri" />
+      </div>
+      <button class="btn" onclick="handleRegister()">Crea account</button>
+      <div class="msg" id="reg-msg"></div>
+    </div>
+
+    <a href="index.html" class="back">← Torna alla home</a>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'INSERISCI_QUI_SUPABASE_URL';
+    const SUPABASE_ANON_KEY = 'INSERISCI_QUI_SUPABASE_ANON_KEY';
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Redirect se già loggato
+    sb.auth.getSession().then(({ data }) => {
+      if (data.session) window.location.href = 'dashboard.html';
+    });
+
+    function showTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.form').forEach(f => f.classList.add('hidden'));
+      event.target.classList.add('active');
+      document.getElementById('form-' + tab).classList.remove('hidden');
+    }
+
+    function showMsg(id, text, type) {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.className = 'msg ' + type;
+    }
+
+    async function handleLogin() {
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      if (!email || !password) return showMsg('login-msg', 'Compila tutti i campi.', 'error');
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) return showMsg('login-msg', error.message, 'error');
+      window.location.href = 'dashboard.html';
+    }
+
+    async function handleMagicLink() {
+      const email = document.getElementById('login-email').value;
+      if (!email) return showMsg('login-msg', 'Inserisci la tua email prima.', 'error');
+      const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.origin + '/dashboard.html' } });
+      if (error) return showMsg('login-msg', error.message, 'error');
+      showMsg('login-msg', 'Magic link inviato! Controlla la tua email.', 'success');
+    }
+
+    async function handleRegister() {
+      const name = document.getElementById('reg-name').value;
+      const email = document.getElementById('reg-email').value;
+      const password = document.getElementById('reg-password').value;
+      if (!name || !email || !password) return showMsg('reg-msg', 'Compila tutti i campi.', 'error');
+      if (password.length < 8) return showMsg('reg-msg', 'Password minimo 8 caratteri.', 'error');
+      const { error } = await sb.auth.signUp({ email, password, options: { data: { full_name: name } } });
+      if (error) return showMsg('reg-msg', error.message, 'error');
+      showMsg('reg-msg', 'Account creato! Controlla la tua email per confermare.', 'success');
+    }
+  </script>
+</body>
+</html>
