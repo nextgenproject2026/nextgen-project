@@ -108,7 +108,7 @@
 
     // Redirect se già loggato
     sb.auth.getSession().then(({ data }) => {
-      if (data.session) window.location.href = 'dashboard.html';
+      if (data.session) window.location.href = 'area.html';
     });
 
     function showTab(tab) {
@@ -130,13 +130,13 @@
       if (!email || !password) return showMsg('login-msg', 'Compila tutti i campi.', 'error');
       const { error } = await sb.auth.signInWithPassword({ email, password });
       if (error) return showMsg('login-msg', error.message, 'error');
-      window.location.href = 'dashboard.html';
+      window.location.href = 'area.html';
     }
 
     async function handleMagicLink() {
       const email = document.getElementById('login-email').value;
       if (!email) return showMsg('login-msg', 'Inserisci la tua email prima.', 'error');
-      const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.origin + '/dashboard.html' } });
+      const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.origin + '/area.html' } });
       if (error) return showMsg('login-msg', error.message, 'error');
       showMsg('login-msg', 'Magic link inviato! Controlla la tua email.', 'success');
     }
