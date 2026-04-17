@@ -457,45 +457,40 @@
         </div>
       </div>
 
+      <!-- ── TAB UTENTI ── -->
+      <div class="tab-view" id="tab-users">
+        <div class="page-title">Utenti</div>
+        <p class="page-sub">Tutti gli account registrati sulla piattaforma.</p>
+        <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+          <input type="text" id="users-search" placeholder="Cerca per nome o email..." oninput="filterUsers()" style="flex:1;min-width:180px;">
+          <select id="users-filter-admin" onchange="filterUsers()" style="font-family:var(--font);font-size:13px;background:var(--bg-2);border:1px solid var(--border);color:var(--gray-2);padding:10px 14px;border-radius:4px;outline:none;width:auto;">
+            <option value="">Tutti</option>
+            <option value="admin">Solo admin</option>
+            <option value="user">Solo utenti</option>
+          </select>
+        </div>
+        <div style="font-size:12px;color:var(--gray-3);margin-bottom:16px;" id="users-count"></div>
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border);">
+                <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Nome</th>
+                <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Email</th>
+                <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Ruolo</th>
+                <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Registrato il</th>
+                <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Biglietti</th>
+                <th style="padding:10px 14px;"></th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body">
+              <tr><td colspan="6" style="padding:32px;text-align:center;color:var(--gray-3);">Caricamento...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div><!-- end content -->
   </div><!-- end layout -->
-
-  <!-- TAB UTENTI (fuori dal layout per larghezza piena) -->
-  <div class="tab-view" id="tab-users" style="display:none;padding:48px;max-width:1100px;margin:0 auto;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-      <div class="page-title">Utenti</div>
-    </div>
-    <p class="page-sub">Tutti gli account registrati sulla piattaforma.</p>
-
-    <div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;">
-      <input type="text" id="users-search" placeholder="Cerca per nome o email..." oninput="filterUsers()" style="flex:1;min-width:200px;">
-      <select id="users-filter-admin" onchange="filterUsers()" style="font-family:var(--font);font-size:13px;background:var(--bg-2);border:1px solid var(--border);color:var(--gray-2);padding:10px 14px;border-radius:4px;outline:none;width:auto;">
-        <option value="">Tutti gli utenti</option>
-        <option value="admin">Solo admin</option>
-        <option value="user">Solo utenti</option>
-      </select>
-    </div>
-
-    <div style="font-size:12px;color:var(--gray-3);margin-bottom:16px;" id="users-count"></div>
-
-    <div style="overflow-x:auto;">
-      <table style="width:100%;border-collapse:collapse;font-size:13px;">
-        <thead>
-          <tr style="border-bottom:1px solid var(--border);">
-            <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Nome</th>
-            <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Email</th>
-            <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Ruolo</th>
-            <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Registrato il</th>
-            <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Biglietti</th>
-            <th style="padding:10px 14px;"></th>
-          </tr>
-        </thead>
-        <tbody id="users-table-body">
-          <tr><td colspan="6" style="padding:32px;text-align:center;color:var(--gray-3);">Caricamento...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
 
   <!-- SAVE BAR -->
   <div class="save-bar" id="save-bar">
