@@ -480,7 +480,7 @@
         linkedin: document.getElementById('f-linkedin').value,
         phone: document.getElementById('f-phone').value,
         bio: document.getElementById('f-bio').value,
-        skills, updated_at: new Date().toISOString()
+        skills
       };
       const { error } = await sb.from('profiles').update(updates).eq('id', currentUser.id);
       if (error) return showMsg('profile-msg', 'Errore: ' + error.message, 'error');
