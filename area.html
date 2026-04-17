@@ -242,6 +242,10 @@
         <svg viewBox="0 0 15 15" fill="none"><rect x="2" y="2" width="11" height="11" rx="1" stroke="currentColor" stroke-width="1.3"/><path d="M5 7.5h5M7.5 5v5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
         Gestione eventi
       </button>
+      <button class="tab-btn" id="users-tab-btn" onclick="switchTab('users', this)" style="display:none;">
+        <svg viewBox="0 0 15 15" fill="none"><circle cx="5" cy="5" r="2" stroke="currentColor" stroke-width="1.3"/><circle cx="10" cy="5" r="2" stroke="currentColor" stroke-width="1.3"/><path d="M1 13c0-2.5 1.8-4 4-4s4 1.5 4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M10 9c1.5 0 4 .8 4 3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Utenti
+      </button>
     </aside>
 
     <!-- CONTENT -->
@@ -456,6 +460,43 @@
     </div><!-- end content -->
   </div><!-- end layout -->
 
+  <!-- TAB UTENTI (fuori dal layout per larghezza piena) -->
+  <div class="tab-view" id="tab-users" style="display:none;padding:48px;max-width:1100px;margin:0 auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <div class="page-title">Utenti</div>
+    </div>
+    <p class="page-sub">Tutti gli account registrati sulla piattaforma.</p>
+
+    <div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;">
+      <input type="text" id="users-search" placeholder="Cerca per nome o email..." oninput="filterUsers()" style="flex:1;min-width:200px;">
+      <select id="users-filter-admin" onchange="filterUsers()" style="font-family:var(--font);font-size:13px;background:var(--bg-2);border:1px solid var(--border);color:var(--gray-2);padding:10px 14px;border-radius:4px;outline:none;width:auto;">
+        <option value="">Tutti gli utenti</option>
+        <option value="admin">Solo admin</option>
+        <option value="user">Solo utenti</option>
+      </select>
+    </div>
+
+    <div style="font-size:12px;color:var(--gray-3);margin-bottom:16px;" id="users-count"></div>
+
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border);">
+            <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Nome</th>
+            <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Email</th>
+            <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Ruolo</th>
+            <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Registrato il</th>
+            <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Biglietti</th>
+            <th style="padding:10px 14px;"></th>
+          </tr>
+        </thead>
+        <tbody id="users-table-body">
+          <tr><td colspan="6" style="padding:32px;text-align:center;color:var(--gray-3);">Caricamento...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- SAVE BAR -->
   <div class="save-bar" id="save-bar">
     <p>Modifiche non salvate</p>
@@ -533,6 +574,7 @@
         document.getElementById('admin-divider').style.display = 'block';
         document.getElementById('admin-section-label').style.display = 'block';
         document.getElementById('admin-tab-btn').style.display = 'flex';
+        document.getElementById('users-tab-btn').style.display = 'flex';
       }
     }
 
@@ -594,6 +636,66 @@
           </div>
         </div>`;
       }).join('');
+    }
+
+    let allUsers = [];
+
+    async function loadUsers() {
+      document.getElementById('users-table-body').innerHTML = '<tr><td colspan="6" style="padding:32px;text-align:center;color:var(--gray-3);">Caricamento...</td></tr>';
+      const { data } = await sb.from('profiles').select('*, tickets(id, status)').order('created_at', { ascending: false });
+      allUsers = data || [];
+      renderUsers(allUsers);
+    }
+
+    function filterUsers() {
+      const q = document.getElementById('users-search').value.toLowerCase();
+      const adminFilter = document.getElementById('users-filter-admin').value;
+      const filtered = allUsers.filter(u =>
+        (!q || (u.full_name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q)) &&
+        (!adminFilter || (adminFilter === 'admin' ? u.is_admin : !u.is_admin))
+      );
+      renderUsers(filtered);
+    }
+
+    function renderUsers(users) {
+      document.getElementById('users-count').textContent = users.length + ' utenti';
+      const tbody = document.getElementById('users-table-body');
+      if (!users.length) { tbody.innerHTML = '<tr><td colspan="6" style="padding:32px;text-align:center;color:var(--gray-3);">Nessun utente trovato.</td></tr>'; return; }
+      tbody.innerHTML = users.map(u => {
+        const date = new Date(u.created_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' });
+        const tickets = (u.tickets || []).filter(t => t.status === 'confirmed').length;
+        const isMe = u.id === currentUser.id;
+        const adminBadge = u.is_admin ? '<span style="font-size:10px;font-weight:700;letter-spacing:0.08em;background:rgba(255,255,255,0.1);color:var(--gray-1);padding:2px 7px;border-radius:2px;">Admin</span>' : '<span style="font-size:12px;color:var(--gray-3);">Utente</span>';
+        const deleteBtn = isMe
+          ? '<span style="font-size:11px;color:var(--gray-3);">Account corrente</span>'
+          : `<button onclick="deleteUser('${u.id}', '${(u.email || '').replace(/'/g, "\\'")}' )" style="font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;background:transparent;color:#ff6b6b;border:1px solid rgba(220,50,50,0.3);padding:4px 8px;border-radius:3px;cursor:pointer;">Elimina</button>`;
+        return `<tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:12px 14px;font-weight:700;">${u.full_name || '—'}</td>
+          <td style="padding:12px 14px;color:var(--gray-2);">${u.email || '—'}</td>
+          <td style="padding:12px 14px;">${adminBadge}</td>
+          <td style="padding:12px 14px;color:var(--gray-2);">${date}</td>
+          <td style="padding:12px 14px;color:var(--gray-2);">${tickets} bigliett${tickets !== 1 ? 'i' : 'o'}</td>
+          <td style="padding:12px 14px;">${deleteBtn}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    async function deleteUser(userId, userEmail) {
+      if (!confirm(`Sei sicuro di voler eliminare l'account di ${userEmail}?\n\nQuesta azione è irreversibile e cancellerà anche tutti i suoi biglietti.`)) return;
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        const res = await fetch('/api/delete-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: userId, admin_token: session.access_token })
+        });
+        const result = await res.json();
+        if (result.error) return alert('Errore: ' + result.error);
+        allUsers = allUsers.filter(u => u.id !== userId);
+        renderUsers(allUsers);
+      } catch (err) {
+        alert('Errore: ' + err.message);
+      }
     }
 
     let allAttendees = [];
@@ -847,11 +949,18 @@
     function switchTab(name, btn) {
       document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById('tab-' + name).classList.add('active');
+      const tabEl = document.getElementById('tab-' + name);
+      if (tabEl) { tabEl.style.display = 'block'; tabEl.classList.add('active'); }
       btn.classList.add('active');
       if (name === 'biglietti') loadTickets();
       if (name === 'community') loadCommunity();
       if (name === 'admin') loadAdminEvents();
+      if (name === 'users') loadUsers();
+      // Nascondi tutti gli altri
+      ['profilo','biglietti','community','admin','users'].filter(n => n !== name).forEach(n => {
+        const el = document.getElementById('tab-' + n);
+        if (el) { el.style.display = 'none'; el.classList.remove('active'); }
+      });
     }
 
     // ── PROFILO ──
