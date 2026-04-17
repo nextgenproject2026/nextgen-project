@@ -400,6 +400,56 @@
         <div id="admin-events-list">
           <div style="color:var(--gray-3);font-size:14px;">Caricamento...</div>
         </div>
+
+        <!-- SEZIONE ISCRITTI -->
+        <div id="admin-attendees-section" style="display:none;margin-top:48px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+            <div>
+              <div class="section-label" style="margin-bottom:4px;">Iscritti</div>
+              <div style="font-size:18px;font-weight:900;letter-spacing:-0.02em;" id="attendees-event-title"></div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <div style="font-size:13px;color:var(--gray-2);" id="attendees-summary"></div>
+              <button class="btn-secondary" style="font-size:11px;padding:6px 12px;" onclick="exportAttendees()">Esporta CSV</button>
+              <button class="btn-secondary" style="font-size:11px;padding:6px 12px;" onclick="closeAttendees()">× Chiudi</button>
+            </div>
+          </div>
+
+          <!-- FILTRI -->
+          <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+            <select id="attendees-filter-status" onchange="renderAttendees()" style="font-family:var(--font);font-size:12px;background:var(--bg-2);border:1px solid var(--border);color:var(--gray-2);padding:8px 12px;border-radius:4px;outline:none;width:auto;">
+              <option value="">Tutti gli stati</option>
+              <option value="confirmed">Confermati</option>
+              <option value="pending">In attesa</option>
+              <option value="cancelled">Annullati</option>
+            </select>
+            <select id="attendees-filter-payment" onchange="renderAttendees()" style="font-family:var(--font);font-size:12px;background:var(--bg-2);border:1px solid var(--border);color:var(--gray-2);padding:8px 12px;border-radius:4px;outline:none;width:auto;">
+              <option value="">Tutti i pagamenti</option>
+              <option value="online">Pagato online</option>
+              <option value="onsite">Paga in sede</option>
+            </select>
+          </div>
+
+          <!-- TABELLA -->
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:13px;">
+              <thead>
+                <tr style="border-bottom:1px solid var(--border);">
+                  <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Nome</th>
+                  <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Email</th>
+                  <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Biglietto</th>
+                  <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Pagamento</th>
+                  <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Importo</th>
+                  <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Stato</th>
+                  <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Data</th>
+                  <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-3);">Check-in</th>
+                </tr>
+              </thead>
+              <tbody id="attendees-table-body"></tbody>
+            </table>
+          </div>
+          <div id="attendees-empty" style="display:none;text-align:center;padding:48px;color:var(--gray-3);font-size:14px;">Nessun iscritto ancora.</div>
+        </div>
       </div>
 
     </div><!-- end content -->
@@ -537,11 +587,124 @@
           <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
             <button class="btn-secondary" style="font-size:11px;padding:6px 12px;" onclick="navigator.clipboard.writeText('${eventUrl}')">Copia link</button>
             <a class="btn-secondary" href="${eventUrl}" target="_blank" style="font-size:11px;padding:6px 12px;text-decoration:none;">Anteprima</a>
+            <button class="btn-secondary" style="font-size:11px;padding:6px 12px;" onclick="loadAttendees('${ev.id}', '${ev.title.replace(/'/g, "\\'")}')">Iscritti (${ev.tickets_sold})</button>
             <button class="btn-secondary" style="font-size:11px;padding:6px 12px;" onclick="openEditModal('${ev.id}')">Modifica</button>
             <button class="btn-primary" style="font-size:11px;padding:6px 12px;" onclick="togglePublish('${ev.id}', ${ev.is_published})">${ev.is_published ? 'Nascondi' : 'Pubblica'}</button>
           </div>
         </div>`;
       }).join('');
+    }
+
+    let allAttendees = [];
+    let currentEventForAttendees = null;
+
+    async function loadAttendees(eventId, eventTitle) {
+      currentEventForAttendees = eventId;
+      document.getElementById('attendees-event-title').textContent = eventTitle;
+      document.getElementById('admin-attendees-section').style.display = 'block';
+      document.getElementById('attendees-table-body').innerHTML = '<tr><td colspan="8" style="padding:32px;text-align:center;color:var(--gray-3);">Caricamento...</td></tr>';
+
+      const { data, error } = await sb
+        .from('tickets')
+        .select('*, profiles(full_name, email)')
+        .eq('event_id', eventId)
+        .order('created_at', { ascending: false });
+
+      allAttendees = data || [];
+      renderAttendees();
+
+      // Scroll alla sezione
+      setTimeout(() => document.getElementById('admin-attendees-section').scrollIntoView({ behavior: 'smooth' }), 100);
+    }
+
+    function renderAttendees() {
+      const statusFilter = document.getElementById('attendees-filter-status').value;
+      const paymentFilter = document.getElementById('attendees-filter-payment').value;
+
+      const filtered = allAttendees.filter(t =>
+        (!statusFilter || t.status === statusFilter) &&
+        (!paymentFilter || t.payment_method === paymentFilter)
+      );
+
+      const confirmed = allAttendees.filter(t => t.status === 'confirmed').length;
+      const onsite = allAttendees.filter(t => t.payment_method === 'onsite' && t.status === 'confirmed').length;
+      const online = allAttendees.filter(t => t.payment_method === 'online' && t.status === 'confirmed').length;
+      const revenue = allAttendees.filter(t => t.status === 'confirmed' && t.payment_method === 'online').reduce((s, t) => s + t.price_paid, 0);
+      document.getElementById('attendees-summary').innerHTML = `<span style="color:#4ade80;">${confirmed} confermati</span> &nbsp;·&nbsp; ${online} online &nbsp;·&nbsp; ${onsite} in sede &nbsp;·&nbsp; <span style="color:#4ade80;">€${(revenue/100).toFixed(0)} incassati</span>`;
+
+      const tbody = document.getElementById('attendees-table-body');
+      const empty = document.getElementById('attendees-empty');
+
+      if (!filtered.length) {
+        tbody.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+
+      const statusMap = { confirmed: '<span style="color:#4ade80;font-weight:700;">Confermato</span>', pending: '<span style="color:#fbbf24;font-weight:700;">In attesa</span>', cancelled: '<span style="color:#ff6b6b;font-weight:700;">Annullato</span>', refunded: '<span style="color:#ff6b6b;">Rimborsato</span>' };
+      const typeMap = { early_bird: 'Early Bird', standard: 'Standard' };
+      const paymentMap = { online: '💳 Online', onsite: '💵 In sede' };
+
+      tbody.innerHTML = filtered.map(t => {
+        const name = t.profiles?.full_name || '—';
+        const email = t.profiles?.email || '—';
+        const date = new Date(t.created_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' });
+        const price = '€' + (t.price_paid / 100).toFixed(0);
+        const checkin = t.checked_in
+          ? `<span style="color:#4ade80;font-weight:700;">✓ ${new Date(t.checked_in_at).toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit' })}</span>`
+          : `<button onclick="checkIn('${t.id}')" style="font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;background:transparent;color:var(--gray-2);border:1px solid var(--border);padding:4px 8px;border-radius:3px;cursor:pointer;">Check-in</button>`;
+        return `<tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:12px 14px;font-weight:700;">${name}</td>
+          <td style="padding:12px 14px;color:var(--gray-2);">${email}</td>
+          <td style="padding:12px 14px;color:var(--gray-2);">${typeMap[t.ticket_type] || t.ticket_type}</td>
+          <td style="padding:12px 14px;color:var(--gray-2);">${paymentMap[t.payment_method] || t.payment_method}</td>
+          <td style="padding:12px 14px;font-weight:700;">${price}</td>
+          <td style="padding:12px 14px;">${statusMap[t.status] || t.status}</td>
+          <td style="padding:12px 14px;color:var(--gray-2);">${date}</td>
+          <td style="padding:12px 14px;">${checkin}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    async function checkIn(ticketId) {
+      const { error } = await sb.from('tickets').update({
+        checked_in: true,
+        checked_in_at: new Date().toISOString()
+      }).eq('id', ticketId);
+      if (!error) {
+        const ticket = allAttendees.find(t => t.id === ticketId);
+        if (ticket) { ticket.checked_in = true; ticket.checked_in_at = new Date().toISOString(); }
+        renderAttendees();
+      }
+    }
+
+    function exportAttendees() {
+      const rows = [['Nome', 'Email', 'Biglietto', 'Pagamento', 'Importo', 'Stato', 'Check-in', 'Data']];
+      allAttendees.forEach(t => {
+        rows.push([
+          t.profiles?.full_name || '',
+          t.profiles?.email || '',
+          t.ticket_type === 'early_bird' ? 'Early Bird' : 'Standard',
+          t.payment_method === 'online' ? 'Online' : 'In sede',
+          '€' + (t.price_paid / 100).toFixed(0),
+          t.status,
+          t.checked_in ? 'Sì' : 'No',
+          new Date(t.created_at).toLocaleDateString('it-IT')
+        ]);
+      });
+      const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'iscritti.csv'; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function closeAttendees() {
+      document.getElementById('admin-attendees-section').style.display = 'none';
+      currentEventForAttendees = null;
+      allAttendees = [];
     }
 
     let editingEventId = null;
