@@ -507,10 +507,113 @@
           <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
             <button class="btn-secondary" style="font-size:11px;padding:6px 12px;" onclick="navigator.clipboard.writeText('${eventUrl}')">Copia link</button>
             <a class="btn-secondary" href="${eventUrl}" target="_blank" style="font-size:11px;padding:6px 12px;text-decoration:none;">Anteprima</a>
+            <button class="btn-secondary" style="font-size:11px;padding:6px 12px;" onclick="openEditModal('${ev.id}')">Modifica</button>
             <button class="btn-primary" style="font-size:11px;padding:6px 12px;" onclick="togglePublish('${ev.id}', ${ev.is_published})">${ev.is_published ? 'Nascondi' : 'Pubblica'}</button>
           </div>
         </div>`;
       }).join('');
+    }
+
+    let editingEventId = null;
+
+    async function openEditModal(id) {
+      const { data: ev } = await sb.from('events').select('*').eq('id', id).single();
+      if (!ev) return;
+      editingEventId = id;
+
+      // Popola i campi del form con i dati esistenti
+      document.getElementById('ev-title').value = ev.title || '';
+      document.getElementById('ev-desc').value = ev.description || '';
+      document.getElementById('ev-date').value = ev.event_date ? ev.event_date.slice(0,16) : '';
+      document.getElementById('ev-location').value = ev.location || '';
+      document.getElementById('ev-price-eb').value = ev.price_early_bird ? (ev.price_early_bird / 100) : 18;
+      document.getElementById('ev-price-std').value = ev.price_standard ? (ev.price_standard / 100) : 20;
+      document.getElementById('ev-price-site').value = ev.price_onsite ? (ev.price_onsite / 100) : 25;
+      document.getElementById('ev-eb-days').value = ev.price_early_bird_days || 5;
+      document.getElementById('ev-open-at').value = ev.early_bird_start ? ev.early_bird_start.slice(0,16) : '';
+      document.getElementById('ev-capacity').value = ev.capacity || 100;
+      document.getElementById('ev-speaker-name').value = ev.speaker_name || '';
+      document.getElementById('ev-speaker-bio').value = ev.speaker_bio || '';
+      document.getElementById('ev-agenda').value = ev.program || '';
+      document.getElementById('ev-cover').value = ev.cover_image_url || '';
+      document.getElementById('ev-status').value = ev.is_published ? 'true' : 'false';
+
+      // Cambia il bottone da "Crea" a "Salva modifiche"
+      const btn = document.querySelector('#tab-admin .btn-primary[onclick="createNewEvent()"]');
+      if (btn) {
+        btn.textContent = 'Salva modifiche';
+        btn.onclick = saveEditEvent;
+      }
+
+      // Aggiungi bottone annulla modifica se non esiste
+      const actions = document.querySelector('#tab-admin [style*="gap:12px"]');
+      if (actions && !document.getElementById('btn-cancel-edit')) {
+        const cancelBtn = document.createElement('button');
+        cancelBtn.id = 'btn-cancel-edit';
+        cancelBtn.className = 'btn-secondary';
+        cancelBtn.textContent = 'Annulla modifica';
+        cancelBtn.onclick = cancelEdit;
+        actions.appendChild(cancelBtn);
+      }
+
+      showMsg('event-msg', 'Stai modificando: ' + ev.title, 'success');
+      // Scroll al form
+      document.getElementById('tab-admin').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function saveEditEvent() {
+      if (!editingEventId) return;
+      const priceEb = Math.round(parseFloat(document.getElementById('ev-price-eb').value || 18) * 100);
+      const priceStd = Math.round(parseFloat(document.getElementById('ev-price-std').value || 20) * 100);
+      const priceSite = Math.round(parseFloat(document.getElementById('ev-price-site').value || 25) * 100);
+      const { error } = await sb.from('events').update({
+        title: document.getElementById('ev-title').value,
+        description: document.getElementById('ev-desc').value,
+        event_date: document.getElementById('ev-date').value,
+        location: document.getElementById('ev-location').value,
+        price_early_bird: priceEb,
+        price_standard: priceStd,
+        price_onsite: priceSite,
+        price_early_bird_days: parseInt(document.getElementById('ev-eb-days').value || 5),
+        early_bird_start: document.getElementById('ev-open-at').value || null,
+        capacity: parseInt(document.getElementById('ev-capacity').value || 100),
+        speaker_name: document.getElementById('ev-speaker-name').value || null,
+        speaker_bio: document.getElementById('ev-speaker-bio').value || null,
+        program: document.getElementById('ev-agenda').value || null,
+        cover_image_url: document.getElementById('ev-cover').value || null,
+        is_published: document.getElementById('ev-status').value === 'true'
+      }).eq('id', editingEventId);
+
+      if (error) return showMsg('event-msg', 'Errore: ' + error.message, 'error');
+      showMsg('event-msg', 'Evento aggiornato con successo!', 'success');
+      cancelEdit();
+      loadAdminEvents();
+    }
+
+    function cancelEdit() {
+      editingEventId = null;
+      // Resetta il form
+      ['ev-title','ev-desc','ev-location','ev-speaker-name','ev-speaker-bio','ev-agenda','ev-cover'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      document.getElementById('ev-price-eb').value = 18;
+      document.getElementById('ev-price-std').value = 20;
+      document.getElementById('ev-price-site').value = 25;
+      document.getElementById('ev-eb-days').value = 5;
+      document.getElementById('ev-capacity').value = 100;
+      document.getElementById('ev-status').value = 'false';
+
+      // Ripristina bottone crea
+      const btn = document.querySelector('#tab-admin .btn-primary');
+      if (btn) { btn.textContent = 'Crea evento'; btn.onclick = createNewEvent; }
+
+      // Rimuovi bottone annulla
+      const cancelBtn = document.getElementById('btn-cancel-edit');
+      if (cancelBtn) cancelBtn.remove();
+
+      const msgEl = document.getElementById('event-msg');
+      if (msgEl) msgEl.className = 'msg';
     }
 
     async function init() {
