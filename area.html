@@ -375,7 +375,13 @@
             <div class="form-group"><label>Nome speaker</label><input type="text" id="ev-speaker-name" placeholder="Nome Cognome"></div>
             <div class="form-group"><label>Bio speaker</label><input type="text" id="ev-speaker-bio" placeholder="CEO di..."></div>
             <div class="form-group full"><label>Programma serata (agenda)</label><textarea id="ev-agenda" placeholder="21:00 - Aperitivo&#10;21:30 - Presentazioni&#10;22:00 - Talk"></textarea></div>
-            <div class="form-group full"><label>URL cover immagine</label><input type="url" id="ev-cover" placeholder="https://..."></div>
+            <div class="form-group full"><label>Cover immagine</label>
+              <div style="display:flex;gap:10px;align-items:center;">
+                <input type="file" id="ev-cover-file" accept="image/*" onchange="previewCover(this)" style="flex:1;">
+                <div id="ev-cover-preview" style="width:80px;height:45px;background:var(--bg-3);border:1px solid var(--border);border-radius:4px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--gray-3);">Anteprima</div>
+              </div>
+              <input type="hidden" id="ev-cover">
+            </div>
             <div class="form-group"><label>Stato</label>
               <select id="ev-status">
                 <option value="false">Bozza</option>
@@ -446,6 +452,29 @@
     let allMembers = [];
 
 
+    function previewCover(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const preview = document.getElementById('ev-cover-preview');
+      const reader = new FileReader();
+      reader.onload = e => {
+        preview.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function uploadCoverIfNeeded() {
+      const fileInput = document.getElementById('ev-cover-file');
+      const file = fileInput?.files?.[0];
+      if (!file) return document.getElementById('ev-cover').value || null;
+      const ext = file.name.split('.').pop();
+      const path = `covers/${Date.now()}.${ext}`;
+      const { error } = await sb.storage.from('events').upload(path, file, { upsert: true });
+      if (error) { showMsg('event-msg', 'Errore upload immagine: ' + error.message, 'error'); return null; }
+      const { data } = sb.storage.from('events').getPublicUrl(path);
+      return data.publicUrl;
+    }
+
     // ── ADMIN ──
     async function checkAdmin() {
       const { data } = await sb.from('profiles').select('is_admin').eq('id', currentUser.id).single();
@@ -463,6 +492,7 @@
       const priceEb = Math.round(parseFloat(document.getElementById('ev-price-eb').value || 18) * 100);
       const priceStd = Math.round(parseFloat(document.getElementById('ev-price-std').value || 20) * 100);
       const priceSite = Math.round(parseFloat(document.getElementById('ev-price-site').value || 25) * 100);
+      const coverUrl = await uploadCoverIfNeeded();
       const { data, error } = await sb.from('events').insert({
         title,
         description: document.getElementById('ev-desc').value,
@@ -477,7 +507,7 @@
         speaker_name: document.getElementById('ev-speaker-name').value || null,
         speaker_bio: document.getElementById('ev-speaker-bio').value || null,
         program: document.getElementById('ev-agenda').value || null,
-        cover_image_url: document.getElementById('ev-cover').value || null,
+        cover_image_url: coverUrl,
         is_published: document.getElementById('ev-status').value === 'true'
       }).select().single();
       if (error) return showMsg('event-msg', 'Errore: ' + error.message, 'error');
@@ -566,6 +596,7 @@
       const priceEb = Math.round(parseFloat(document.getElementById('ev-price-eb').value || 18) * 100);
       const priceStd = Math.round(parseFloat(document.getElementById('ev-price-std').value || 20) * 100);
       const priceSite = Math.round(parseFloat(document.getElementById('ev-price-site').value || 25) * 100);
+      const coverUrl = await uploadCoverIfNeeded();
       const { error } = await sb.from('events').update({
         title: document.getElementById('ev-title').value,
         description: document.getElementById('ev-desc').value,
@@ -580,7 +611,7 @@
         speaker_name: document.getElementById('ev-speaker-name').value || null,
         speaker_bio: document.getElementById('ev-speaker-bio').value || null,
         program: document.getElementById('ev-agenda').value || null,
-        cover_image_url: document.getElementById('ev-cover').value || null,
+        cover_image_url: coverUrl,
         is_published: document.getElementById('ev-status').value === 'true'
       }).eq('id', editingEventId);
 
