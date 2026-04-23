@@ -493,6 +493,57 @@
     </div><!-- end content -->
   </div><!-- end layout -->
 
+  <!-- MODAL UPGRADE BIGLIETTO -->
+  <div class="modal-overlay" id="upgrade-modal" onclick="closeModalIfOutside(event)">
+    <div class="p-modal">
+      <button class="modal-close" onclick="closeUpgradeModal()">×</button>
+      <h3>Paga online</h3>
+      <p style="font-size:14px;color:var(--gray-2);margin-bottom:20px;line-height:1.6;">Passa al pagamento online. Verrai reindirizzato su Stripe per completare il pagamento.</p>
+      <div style="background:var(--bg-3);border:1px solid var(--border);border-radius:4px;padding:14px 16px;margin-bottom:20px;">
+        <div style="font-size:12px;color:var(--gray-3);margin-bottom:4px;">Importo da pagare</div>
+        <div style="font-size:22px;font-weight:900;" id="upgrade-price">—</div>
+      </div>
+      <div class="msg" id="upgrade-msg"></div>
+      <div class="p-modal-actions">
+        <button class="btn-primary" id="btn-upgrade" onclick="confirmUpgrade()">Procedi al pagamento</button>
+        <button class="btn-secondary" onclick="closeUpgradeModal()">Annulla</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CESSIONE BIGLIETTO -->
+  <div class="modal-overlay" id="transfer-modal" onclick="closeModalIfOutside(event)">
+    <div class="p-modal">
+      <button class="modal-close" onclick="closeTransferModal()">×</button>
+      <h3>Cedi il biglietto</h3>
+      <p style="font-size:14px;color:var(--gray-2);margin-bottom:20px;line-height:1.6;">Il biglietto verrà trasferito al nuovo partecipante. Riceverete entrambi una email di conferma.</p>
+      <div class="form-group" style="margin-bottom:12px;"><label>Nome del nuovo partecipante</label><input type="text" id="transfer-name" placeholder="Mario Rossi"></div>
+      <div class="form-group" style="margin-bottom:16px;"><label>Email del nuovo partecipante</label><input type="email" id="transfer-email" placeholder="mario@email.com"></div>
+      <div class="msg" id="transfer-msg"></div>
+      <div class="p-modal-actions">
+        <button class="btn-primary" id="btn-transfer" onclick="confirmTransfer()">Conferma cessione</button>
+        <button class="btn-secondary" onclick="closeTransferModal()">Annulla</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ANNULLAMENTO BIGLIETTO -->
+  <div class="modal-overlay" id="cancel-modal" onclick="closeModalIfOutside(event)">
+    <div class="p-modal">
+      <button class="modal-close" onclick="closeCancelModal()">×</button>
+      <h3>Annulla prenotazione</h3>
+      <p style="font-size:14px;color:var(--gray-2);margin-bottom:16px;line-height:1.6;">Sei sicuro di voler annullare la tua prenotazione per <strong id="cancel-event-name" style="color:var(--white);"></strong>?</p>
+      <div id="cancel-refund-note" style="background:rgba(220,50,50,0.08);border:1px solid rgba(220,50,50,0.2);border-radius:4px;padding:12px 14px;margin-bottom:20px;font-size:13px;color:#ff6b6b;display:none;">
+        ⚠️ Il pagamento online non viene rimborsato automaticamente.
+      </div>
+      <div class="msg" id="cancel-msg"></div>
+      <div class="p-modal-actions">
+        <button class="btn-primary" id="btn-cancel-ticket" onclick="confirmCancel()" style="background:#ff6b6b;color:#fff;">Annulla prenotazione</button>
+        <button class="btn-secondary" onclick="closeCancelModal()">Torna indietro</button>
+      </div>
+    </div>
+  </div>
+
   <!-- SAVE BAR -->
   <div class="save-bar" id="save-bar">
     <p>Modifiche non salvate</p>
@@ -1097,7 +1148,7 @@
 
     // ── BIGLIETTI ──
     async function loadTickets() {
-      const { data } = await sb.from('tickets').select('*, events(title, event_date, location)').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+      const { data } = await sb.from('tickets').select('*, events(id, title, event_date, location, price_standard, price_early_bird, current_ticket_type, current_online_price)').eq('user_id', currentUser.id).order('created_at', { ascending: false });
       const container = document.getElementById('tickets-container');
       if (!data?.length) {
         container.innerHTML = `<div class="empty-state"><p>Non hai ancora nessun biglietto.</p><a href="index.html#events" class="btn-primary">Scopri gli eventi</a></div>`;
@@ -1107,16 +1158,135 @@
         const ev = t.events;
         const date = ev ? new Date(ev.event_date).toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Rome' }) : '—';
         const price = (t.price_paid / 100).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
+        const isCancelled = t.status === 'cancelled';
+        const isOnsite = t.payment_method === 'onsite';
+        const actions = !isCancelled ? `
+          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+            ${isOnsite ? `<button onclick="openUpgradeModal('${t.id}', '${ev?.id}', ${ev?.current_online_price || 0})" style="font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;background:transparent;color:var(--gray-2);border:1px solid var(--border);padding:5px 10px;border-radius:3px;cursor:pointer;">Paga online</button>` : ''}
+            <button onclick="openTransferModal('${t.id}')" style="font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;background:transparent;color:var(--gray-2);border:1px solid var(--border);padding:5px 10px;border-radius:3px;cursor:pointer;">Cedi biglietto</button>
+            <button onclick="openCancelModal('${t.id}', '${ev?.title?.replace(/'/g,"\\'")}', '${t.payment_method}')" style="font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;background:transparent;color:#ff6b6b;border:1px solid rgba(220,50,50,0.3);padding:5px 10px;border-radius:3px;cursor:pointer;">Annulla</button>
+          </div>` : '';
         return `<div class="ticket-card ${t.status}">
-          <div class="ticket-info"><h3>${ev?.title || 'Evento'}</h3><div class="ticket-meta"><span>${date}</span><span>${ev?.location || ''}</span></div></div>
+          <div class="ticket-info">
+            <h3>${ev?.title || 'Evento'}</h3>
+            <div class="ticket-meta"><span>${date}</span><span>${ev?.location || ''}</span></div>
+            ${actions}
+          </div>
           <div class="ticket-right">
             <span class="badge ${t.status}">${t.status === 'confirmed' ? 'Confermato' : t.status === 'pending' ? 'In attesa' : 'Annullato'}</span>
             <span class="badge ${t.ticket_type === 'early_bird' ? 'early-bird' : 'standard'}">${t.ticket_type === 'early_bird' ? 'Early Bird' : 'Standard'}</span>
+            <span class="badge ${isOnsite ? 'pending' : 'confirmed'}" style="font-size:9px;">${isOnsite ? 'In sede' : 'Online'}</span>
             <span class="ticket-price">${price}</span>
             <span class="ticket-qr">#${t.qr_code?.slice(0, 8).toUpperCase()}</span>
           </div>
         </div>`;
       }).join('')}</div>`;
+    }
+
+    // ── GESTIONE BIGLIETTI ──
+    let activeTicketId = null;
+    let activeEventId = null;
+    let activeOnlinePrice = 0;
+
+    function openUpgradeModal(ticketId, eventId, onlinePrice) {
+      activeTicketId = ticketId;
+      activeEventId = eventId;
+      activeOnlinePrice = onlinePrice;
+      document.getElementById('upgrade-price').textContent = onlinePrice ? '€' + (onlinePrice / 100).toFixed(0) : '—';
+      document.getElementById('upgrade-modal').classList.add('open');
+    }
+    function closeUpgradeModal() { document.getElementById('upgrade-modal').classList.remove('open'); activeTicketId = null; }
+
+    async function confirmUpgrade() {
+      document.getElementById('btn-upgrade').disabled = true;
+      document.getElementById('btn-upgrade').textContent = 'In corso...';
+      try {
+        const res = await fetch('/api/create-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            event_id: activeEventId,
+            ticket_type: 'standard',
+            user_id: currentUser.id,
+            user_email: currentUser.email,
+            upgrade_ticket_id: activeTicketId
+          })
+        });
+        const { url, error } = await res.json();
+        if (error) throw new Error(error);
+        window.location.href = url;
+      } catch(e) {
+        showMsg('upgrade-msg', e.message, 'error');
+        document.getElementById('btn-upgrade').disabled = false;
+        document.getElementById('btn-upgrade').textContent = 'Procedi al pagamento';
+      }
+    }
+
+    function openTransferModal(ticketId) {
+      activeTicketId = ticketId;
+      document.getElementById('transfer-name').value = '';
+      document.getElementById('transfer-email').value = '';
+      document.getElementById('transfer-modal').classList.add('open');
+    }
+    function closeTransferModal() { document.getElementById('transfer-modal').classList.remove('open'); activeTicketId = null; }
+
+    async function confirmTransfer() {
+      const name = document.getElementById('transfer-name').value.trim();
+      const email = document.getElementById('transfer-email').value.trim();
+      if (!name || !email) return showMsg('transfer-msg', 'Compila tutti i campi.', 'error');
+      document.getElementById('btn-transfer').disabled = true;
+      document.getElementById('btn-transfer').textContent = 'In corso...';
+      try {
+        const res = await fetch('/api/transfer-ticket', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ticket_id: activeTicketId,
+            new_name: name,
+            new_email: email,
+            sender_id: currentUser.id,
+            sender_email: currentUser.email
+          })
+        });
+        const result = await res.json();
+        if (result.error) throw new Error(result.error);
+        closeTransferModal();
+        loadTickets();
+        alert('Biglietto ceduto con successo!');
+      } catch(e) {
+        showMsg('transfer-msg', e.message, 'error');
+        document.getElementById('btn-transfer').disabled = false;
+        document.getElementById('btn-transfer').textContent = 'Conferma cessione';
+      }
+    }
+
+    function openCancelModal(ticketId, eventTitle, paymentMethod) {
+      activeTicketId = ticketId;
+      document.getElementById('cancel-event-name').textContent = eventTitle;
+      const refundNote = document.getElementById('cancel-refund-note');
+      refundNote.style.display = paymentMethod === 'online' ? 'block' : 'none';
+      document.getElementById('cancel-modal').classList.add('open');
+    }
+    function closeCancelModal() { document.getElementById('cancel-modal').classList.remove('open'); activeTicketId = null; }
+
+    async function confirmCancel() {
+      document.getElementById('btn-cancel-ticket').disabled = true;
+      document.getElementById('btn-cancel-ticket').textContent = 'In corso...';
+      try {
+        const res = await fetch('/api/cancel-ticket', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ticket_id: activeTicketId, user_id: currentUser.id, user_email: currentUser.email })
+        });
+        const result = await res.json();
+        if (result.error) throw new Error(result.error);
+        closeCancelModal();
+        loadTickets();
+      } catch(e) {
+        showMsg('cancel-msg', e.message, 'error');
+        document.getElementById('btn-cancel-ticket').disabled = false;
+        document.getElementById('btn-cancel-ticket').textContent = 'Annulla prenotazione';
+      }
     }
 
     // ── COMMUNITY ──
