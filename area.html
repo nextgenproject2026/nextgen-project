@@ -21,7 +21,8 @@
     .nav-logo svg { width: 90px; height: auto; }
     .nav-logo svg polygon, .nav-logo svg path { fill: var(--white); }
     .nav-right { display: flex; align-items: center; gap: 16px; }
-    .nav-user { font-size: 13px; color: var(--gray-2); }
+    .nav-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--bg-3); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--gray-2); overflow: hidden; flex-shrink: 0; }
+    .nav-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .btn-logout { font-family: var(--font); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: transparent; color: var(--gray-2); border: 1px solid var(--border); padding: 7px 14px; border-radius: 4px; cursor: pointer; transition: color 0.2s; }
     .btn-logout:hover { color: var(--white); }
     .btn-home { font-family: var(--font); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: var(--white); color: var(--bg); border: none; padding: 7px 14px; border-radius: 4px; cursor: pointer; text-decoration: none; }
@@ -211,7 +212,7 @@
       </svg>
     </a>
     <div class="nav-right">
-      <span class="nav-user" id="nav-email"></span>
+      <div class="nav-avatar" id="nav-avatar"><span id="nav-initials">?</span></div>
       <a href="index.html" class="btn-home">Home</a>
       <button class="btn-logout" onclick="handleLogout()">Esci</button>
     </div>
@@ -926,7 +927,14 @@
       const { data: { session } } = await sb.auth.getSession();
       if (!session) return window.location.href = 'login.html';
       currentUser = session.user;
-      document.getElementById('nav-email').textContent = currentUser.email;
+      // Avatar navbar
+      const { data: prof } = await sb.from('profiles').select('full_name, avatar_url').eq('id', currentUser.id).single();
+      if (prof?.avatar_url) {
+        document.getElementById('nav-avatar').innerHTML = `<img src="${prof.avatar_url}" alt="">`;
+      } else {
+        const initials = (prof?.full_name || currentUser.email || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+        document.getElementById('nav-initials').textContent = initials;
+      }
 
       // success banner da Stripe
       const params = new URLSearchParams(window.location.search);
