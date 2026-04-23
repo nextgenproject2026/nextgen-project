@@ -61,6 +61,17 @@ module.exports = async (req, res) => {
 
       if (countError) throw countError;
 
+      // Invia email di conferma
+      try {
+        await fetch(`${process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : 'https://nextgen.business'}/api/send-confirmation`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ticket_id })
+        });
+      } catch (emailErr) {
+        console.error('Errore invio email conferma:', emailErr.message);
+      }
+
       console.log(`Biglietto ${ticket_id} confermato per evento ${event_id}`);
 
     } catch (err) {
