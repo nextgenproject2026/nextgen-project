@@ -249,7 +249,7 @@
     function renderEvent(d) {
       document.title = d.title + ' — NextGen';
       document.getElementById('ev-title').textContent = d.title;
-      const date = new Date(d.event_date).toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+      const date = new Date(d.event_date).toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit', timeZone:'Europe/Rome' });
       document.getElementById('ev-date').textContent = '📅 ' + date;
       document.getElementById('ev-location').textContent = d.location ? '📍 ' + d.location : '';
 

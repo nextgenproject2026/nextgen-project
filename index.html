@@ -940,7 +940,7 @@
       const grid = document.getElementById('events-grid');
       if (!events || !events.length) return;
       grid.innerHTML = events.map((ev, i) => {
-        const date = new Date(ev.event_date).toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const date = new Date(ev.event_date).toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' });
         const price = ev.current_ticket_type === 'early_bird' ? ev.price_early_bird : ev.price_standard;
         const priceStr = (price / 100).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
         const spotsLeft = ev.tickets_available;

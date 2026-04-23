@@ -614,7 +614,7 @@
       const container = document.getElementById('admin-events-list');
       if (!data?.length) { container.innerHTML = '<div style="color:var(--gray-3);font-size:14px;">Nessun evento ancora.</div>'; return; }
       container.innerHTML = data.map(ev => {
-        const date = new Date(ev.event_date).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const date = new Date(ev.event_date).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' });
         const statusColor = ev.is_published ? '#4ade80' : 'var(--gray-3)';
         const statusText = ev.is_published ? 'Pubblicato' : 'Bozza';
         const eventUrl = window.location.origin + '/evento.html?id=' + ev.id;
@@ -1105,7 +1105,7 @@
       }
       container.innerHTML = `<div class="tickets-list">${data.map(t => {
         const ev = t.events;
-        const date = ev ? new Date(ev.event_date).toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '—';
+        const date = ev ? new Date(ev.event_date).toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Rome' }) : '—';
         const price = (t.price_paid / 100).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
         return `<div class="ticket-card ${t.status}">
           <div class="ticket-info"><h3>${ev?.title || 'Evento'}</h3><div class="ticket-meta"><span>${date}</span><span>${ev?.location || ''}</span></div></div>
