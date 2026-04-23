@@ -146,15 +146,15 @@
 
     <div class="booking-card">
       <h3>Prenota il tuo posto</h3>
-      <div id="tier-early" class="price-tier" onclick="selectTier('online')" style="cursor:pointer;">
+      <div id="tier-early" class="price-tier" onclick="selectTier('online', 'tier-early')" style="cursor:pointer;">
         <div><div class="tier-label">Early Bird</div><div class="tier-sub">Primi 5 giorni</div></div>
         <div class="tier-price">€18</div>
       </div>
-      <div id="tier-standard" class="price-tier" onclick="selectTier('online')" style="cursor:pointer;">
+      <div id="tier-standard" class="price-tier" onclick="selectTier('online', 'tier-standard')" style="cursor:pointer;">
         <div><div class="tier-label">Standard</div><div class="tier-sub">Prenotazione online</div></div>
         <div class="tier-price">€20</div>
       </div>
-      <div id="tier-onsite" class="price-tier" onclick="selectTier('onsite')" style="cursor:pointer;">
+      <div id="tier-onsite" class="price-tier" onclick="selectTier('onsite', 'tier-onsite')" style="cursor:pointer;">
         <div><div class="tier-label">In sede</div><div class="tier-sub">Pagamento all'ingresso</div></div>
         <div class="tier-price">€25</div>
       </div>
@@ -319,24 +319,22 @@
 
     let selectedMode = null;
 
-    function selectTier(mode) {
-      // Non fare nulla se sold out
-      if (ev?.current_ticket_type === 'sold_out' && mode === 'online') return;
+    function selectTier(mode, tierId) {
+      if (ev?.current_ticket_type === 'sold_out') return;
 
       selectedMode = mode;
 
-      // Aggiorna stile tier onsite
-      const tierOnsite = document.getElementById('tier-onsite');
-      const tierEarly = document.getElementById('tier-early');
-      const tierStd = document.getElementById('tier-standard');
+      // Reset tutti i tier
+      ['tier-early', 'tier-standard', 'tier-onsite'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.style.borderColor = ''; el.style.background = ''; }
+      });
 
-      if (mode === 'onsite') {
-        if (tierOnsite) tierOnsite.style.borderColor = 'var(--white)';
-        if (tierOnsite) tierOnsite.style.background = 'rgba(255,255,255,0.04)';
-        if (tierEarly) { tierEarly.style.borderColor = ''; tierEarly.style.background = ''; }
-        if (tierStd) { tierStd.style.borderColor = ''; tierStd.style.background = ''; }
-      } else {
-        if (tierOnsite) { tierOnsite.style.borderColor = ''; tierOnsite.style.background = ''; }
+      // Evidenzia solo quello cliccato
+      const selected = document.getElementById(tierId);
+      if (selected) {
+        selected.style.borderColor = 'var(--white)';
+        selected.style.background = 'rgba(255,255,255,0.04)';
       }
 
       // Aggiorna bottone
