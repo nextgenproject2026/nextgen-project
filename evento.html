@@ -146,23 +146,22 @@
 
     <div class="booking-card">
       <h3>Prenota il tuo posto</h3>
-      <div id="tier-early" class="price-tier">
+      <div id="tier-early" class="price-tier" onclick="selectTier('online')" style="cursor:pointer;">
         <div><div class="tier-label">Early Bird</div><div class="tier-sub">Primi 5 giorni</div></div>
         <div class="tier-price">€18</div>
       </div>
-      <div id="tier-standard" class="price-tier">
+      <div id="tier-standard" class="price-tier" onclick="selectTier('online')" style="cursor:pointer;">
         <div><div class="tier-label">Standard</div><div class="tier-sub">Prenotazione online</div></div>
         <div class="tier-price">€20</div>
       </div>
-      <div class="price-tier">
+      <div id="tier-onsite" class="price-tier" onclick="selectTier('onsite')" style="cursor:pointer;">
         <div><div class="tier-label">In sede</div><div class="tier-sub">Pagamento all'ingresso</div></div>
         <div class="tier-price">€25</div>
       </div>
       <div class="divider"></div>
-      
+
       <div id="booking-btns">
-        <button class="btn-book" id="btn-online" onclick="openModal('online')">Prenota e paga online</button>
-        <button class="btn-onsite" onclick="openModal('onsite')">Prenota — paga in sede (€25)</button>
+        <button class="btn-book" id="btn-prenota" onclick="proceedBooking()" disabled style="opacity:0.35;cursor:not-allowed;">Seleziona una modalità</button>
       </div>
       <div class="booking-note">Prenotando crei automaticamente il tuo profilo nella community NextGen.</div>
     </div>
@@ -310,12 +309,54 @@
       }
 
       if (type === 'sold_out') {
-        document.getElementById('btn-online').disabled = true;
-        document.querySelector('.btn-onsite').disabled = true;
+        document.getElementById('btn-prenota').disabled = true;
+        document.getElementById('btn-prenota').style.opacity = '0.35';
         document.getElementById('booking-btns').innerHTML = '<div class="success-box" style="background:rgba(220,50,50,0.08);border-color:rgba(220,50,50,0.2);color:#ff6b6b;">Evento esaurito</div>';
       }
       const op = d.current_online_price;
-      document.getElementById('btn-online').textContent = 'Prenota e paga online (' + (op ? '€'+(op/100).toFixed(0) : '—') + ')';
+      // Il testo del bottone viene aggiornato da selectTier
+    }
+
+    let selectedMode = null;
+
+    function selectTier(mode) {
+      // Non fare nulla se sold out
+      if (ev?.current_ticket_type === 'sold_out' && mode === 'online') return;
+
+      selectedMode = mode;
+
+      // Aggiorna stile tier onsite
+      const tierOnsite = document.getElementById('tier-onsite');
+      const tierEarly = document.getElementById('tier-early');
+      const tierStd = document.getElementById('tier-standard');
+
+      if (mode === 'onsite') {
+        if (tierOnsite) tierOnsite.style.borderColor = 'var(--white)';
+        if (tierOnsite) tierOnsite.style.background = 'rgba(255,255,255,0.04)';
+        if (tierEarly) { tierEarly.style.borderColor = ''; tierEarly.style.background = ''; }
+        if (tierStd) { tierStd.style.borderColor = ''; tierStd.style.background = ''; }
+      } else {
+        if (tierOnsite) { tierOnsite.style.borderColor = ''; tierOnsite.style.background = ''; }
+      }
+
+      // Aggiorna bottone
+      const btn = document.getElementById('btn-prenota');
+      if (btn) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        if (mode === 'onsite') {
+          btn.textContent = 'Prenota — paga in sede (€25)';
+        } else {
+          const price = ev?.current_online_price ? '€' + (ev.current_online_price / 100).toFixed(0) : '';
+          btn.textContent = `Prenota e paga online ${price ? '(' + price + ')' : ''}`;
+        }
+      }
+    }
+
+    function proceedBooking() {
+      if (!selectedMode) return;
+      openModal(selectedMode);
     }
 
     function openModal(m) {
