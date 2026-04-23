@@ -412,9 +412,19 @@
           document.getElementById('m-btn').textContent = 'Conferma prenotazione';
         }
       } else {
-        const { error } = await sb.from('tickets').insert({ event_id: ev.id, user_id: uid, ticket_type: 'standard', price_paid: ev.price_onsite || 2500, payment_method: 'onsite', status: 'confirmed' });
-        if (error) { showMsg('msg-loggedin', error.message, 'error'); document.getElementById('btn-loggedin').disabled = false; document.getElementById('btn-loggedin').textContent = 'Conferma prenotazione'; return; }
+        const { data, error } = await sb.from('tickets').insert({ event_id: ev.id, user_id: uid, ticket_type: 'standard', price_paid: ev.price_onsite || 2500, payment_method: 'onsite', status: 'confirmed' }).select().single();
+        if (error) { showMsg(user ? 'msg-loggedin' : 'msg-register', error.message, 'error'); document.getElementById('btn-loggedin').disabled = false; document.getElementById('btn-loggedin').textContent = 'Conferma prenotazione'; return; }
         await sb.rpc('increment_tickets_sold', { event_id: ev.id });
+
+        // Invia email di conferma
+        try {
+          await fetch('/api/send-confirmation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ticket_id: data.id })
+          });
+        } catch(e) { console.log('Email error:', e); }
+
         closeModal();
         document.getElementById('booking-btns').innerHTML = '<div class="success-box"><strong>Posto confermato!</strong><br>Ti aspettiamo. Ricorda di portare €25 all\'ingresso.</div>';
       }
