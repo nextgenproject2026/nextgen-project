@@ -129,7 +129,7 @@
       Ora puoi accedere, comprare i biglietti e far parte della community.
     </p>
 
-    <a href="index.html" class="btn-primary">Vai alla home</a>
+    <a href="area.html" class="btn-primary" id="btn-next">Vai alla tua area</a>
     
 
     <div class="countdown">Redirect automatico tra <span id="count">5</span> secondi...</div>
@@ -145,11 +145,12 @@
       const params = new URLSearchParams(window.location.search);
       const token_hash = params.get('token_hash');
       const type = params.get('type');
+      const next = params.get('next') || '/area.html';
 
       if (token_hash && type) {
         const { error } = await sb.auth.verifyOtp({ token_hash, type });
         if (!error) {
-          startCountdown();
+          startCountdown(next);
           return;
         }
       }
@@ -157,19 +158,19 @@
       // Fallback: controlla se già loggato
       const { data: { session } } = await sb.auth.getSession();
       if (session) {
-        startCountdown();
+        startCountdown(next);
       }
     }
 
     let count = 5;
-    function startCountdown() {
+    function startCountdown(next) {
       const el = document.getElementById('count');
       const interval = setInterval(() => {
         count--;
         el.textContent = count;
         if (count <= 0) {
           clearInterval(interval);
-          window.location.href = 'index.html';
+          window.location.href = next;
         }
       }, 1000);
     }
