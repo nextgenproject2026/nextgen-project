@@ -283,8 +283,7 @@
       const stdPrice = d.price_standard ? '€' + (d.price_standard / 100).toFixed(0) : '€20';
 
       if (type === 'early_bird') {
-        // Early bird attivo: EB evidenziato, Standard sbarrato
-        document.getElementById('tier-early').className = 'price-tier active';
+        document.getElementById('tier-early').className = 'price-tier';
         document.getElementById('tier-early').innerHTML = `
           <div><div class="tier-label">Early Bird</div><div class="tier-sub tier-deadline urgent">Scade il ${ebDeadlineStr}</div></div>
           <div class="tier-price">${ebPrice}</div>`;
@@ -293,17 +292,15 @@
           <div><div class="tier-label">Standard</div><div class="tier-sub tier-deadline">Disponibile dal ${ebDeadlineStr}</div></div>
           <div class="tier-price strikethrough">${stdPrice}</div>`;
       } else if (type === 'standard') {
-        // Early bird scaduto: EB sbarrato, Standard evidenziato
         document.getElementById('tier-early').className = 'price-tier expired';
         document.getElementById('tier-early').innerHTML = `
           <div><div class="tier-label">Early Bird</div><div class="tier-sub tier-deadline">Scaduto${ebDeadlineStr ? ' il ' + ebDeadlineStr : ''}</div></div>
           <div class="tier-price strikethrough">${ebPrice}</div>`;
-        document.getElementById('tier-standard').className = 'price-tier active';
+        document.getElementById('tier-standard').className = 'price-tier';
         document.getElementById('tier-standard').innerHTML = `
           <div><div class="tier-label">Standard</div><div class="tier-sub">Prenotazione online</div></div>
           <div class="tier-price">${stdPrice}</div>`;
       } else {
-        // Sold out
         document.getElementById('tier-early').className = 'price-tier dim';
         document.getElementById('tier-standard').className = 'price-tier dim';
       }
@@ -321,21 +318,25 @@
 
     function selectTier(mode, tierId) {
       if (ev?.current_ticket_type === 'sold_out') return;
+      // Non permettere selezione di tier non disponibili
+      if (tierId === 'tier-standard' && document.getElementById('tier-standard').classList.contains('expired')) return;
+      if (tierId === 'tier-early' && document.getElementById('tier-early').classList.contains('expired')) return;
 
       selectedMode = mode;
 
-      // Reset tutti i tier
+      // Reset tutti i tier — rimuovi active e stili inline
       ['tier-early', 'tier-standard', 'tier-onsite'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) { el.style.borderColor = ''; el.style.background = ''; }
+        if (el) {
+          el.classList.remove('active');
+          el.style.borderColor = '';
+          el.style.background = '';
+        }
       });
 
       // Evidenzia solo quello cliccato
       const selected = document.getElementById(tierId);
-      if (selected) {
-        selected.style.borderColor = 'var(--white)';
-        selected.style.background = 'rgba(255,255,255,0.04)';
-      }
+      if (selected) selected.classList.add('active');
 
       // Aggiorna bottone
       const btn = document.getElementById('btn-prenota');
