@@ -61,7 +61,7 @@ module.exports = async (req, res) => {
 
       if (!tickets?.length) continue;
 
-      const eventDate = new Date(event.event_date).toLocaleDateString('it-IT', {
+      const eventDate = new Date(event.event_date).toLocaleDateString('it-IT', { timeZone: 'Europe/Rome',
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
         hour: '2-digit', minute: '2-digit'
       });
@@ -95,8 +95,18 @@ module.exports = async (req, res) => {
           </p>
 
           ${isOnsite ? `<div style="background:#3d2a00;border:1px solid #6b4a00;border-radius:8px;padding:16px 20px;margin:20px 0;">
-            <p style="color:#fbbf24;font-weight:700;margin:0 0 4px;">💵 Ricorda il contante</p>
-            <p style="color:#fde68a;font-size:14px;margin:0;">Porta <strong>€25 in contanti</strong> per il pagamento all'ingresso.</p>
+            <p style="color:#fbbf24;font-weight:700;margin:0 0 8px;">💵 Pagamento in sede — €25</p>
+            <p style="color:#fde68a;font-size:14px;margin:0 0 10px;">Domani potrai pagare in due modi:</p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <div style="background:rgba(0,0,0,0.2);border:1px solid rgba(251,191,36,0.2);border-radius:6px;padding:10px 14px;flex:1;min-width:120px;">
+                <p style="color:#fbbf24;font-size:13px;font-weight:700;margin:0 0 2px;">💵 Contanti</p>
+                <p style="color:#fde68a;font-size:12px;margin:0;">Porta €25 in contanti</p>
+              </div>
+              <div style="background:rgba(0,0,0,0.2);border:1px solid rgba(251,191,36,0.2);border-radius:6px;padding:10px 14px;flex:1;min-width:120px;">
+                <p style="color:#fbbf24;font-size:13px;font-weight:700;margin:0 0 2px;">🅿️ PayPal</p>
+                <p style="color:#fde68a;font-size:12px;margin:0;">Pagamento PayPal disponibile</p>
+              </div>
+            </div>
           </div>` : ''}
 
           <table width="100%" cellpadding="0" cellspacing="0" style="background:#1a1a1a;border-radius:8px;padding:20px;margin:20px 0;">
