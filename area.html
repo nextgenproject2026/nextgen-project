@@ -1124,7 +1124,7 @@
       if (allMembers.length) return;
       const { data } = await sb.from('community_directory').select('*').order('created_at', { ascending: false });
       allMembers = data || [];
-      document.getElementById('community-count').textContent = `${allMembers.length} membro${allMembers.length !== 1 ? 'i' : ''} nella community`;
+      document.getElementById('community-count').textContent = `${allMembers.length} ${allMembers.length !== 1 ? 'membri' : 'membro'} nella community`;
       renderMembers(allMembers);
     }
 
