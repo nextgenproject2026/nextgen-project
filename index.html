@@ -945,8 +945,8 @@
         const priceStr = (price / 100).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
         const spotsLeft = ev.tickets_available;
         return `<a href="evento.html?id=${ev.id}" class="event-card ${i === 0 ? 'featured' : ''} fade-up">
-          <div class="event-img" style="background:${ev.cover_url ? 'none' : 'var(--bg-3)'}">
-            ${ev.cover_url ? `<img src="${ev.cover_url}" style="width:100%;height:100%;object-fit:cover;">` : '<span class="event-img-placeholder">NextGen</span>'}
+          <div class="event-img" style="background:${ev.cover_image_url ? 'none' : 'var(--bg-3)'}">
+            ${ev.cover_image_url ? `<img src="${ev.cover_image_url}" style="width:100%;height:100%;object-fit:cover;">` : '<span class="event-img-placeholder">NextGen</span>'}
             <span class="event-badge">${i === 0 ? 'Prossimo' : 'In arrivo'}</span>
           </div>
           <div class="event-body">
