@@ -1195,10 +1195,16 @@
           body: JSON.stringify({ recipient_id: recipientId, sender_name: name, sender_email: email, message })
         });
       } catch(e) { console.log('Email error:', e); }
-      showMsg('contact-msg', 'Messaggio inviato!', 'success');
-      document.getElementById('c-name').value = '';
-      document.getElementById('c-email').value = '';
-      document.getElementById('c-msg').value = '';
+      // Mostra conferma e chiudi dopo 3 secondi
+      const modalBody = document.getElementById('modal-body');
+      modalBody.innerHTML = `<div style="text-align:center;padding:40px 20px;">
+        <div style="width:56px;height:56px;border-radius:50%;background:rgba(50,200,100,0.1);border:1px solid rgba(50,200,100,0.25);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 12L10 17L19 7" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <p style="font-size:17px;font-weight:700;color:#ffffff;margin:0 0 8px;">Messaggio inviato!</p>
+        <p style="font-size:13px;color:var(--gray-2);margin:0;">La finestra si chiuderà tra qualche secondo.</p>
+      </div>`;
+      setTimeout(() => closeMemberModal(), 3000);
     }
 
     function closeMemberModal() { document.getElementById('member-modal').classList.remove('open'); }
