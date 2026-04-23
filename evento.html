@@ -388,6 +388,14 @@
         user = si.user;
       } else {
         user = su.user;
+        // Nuovo utente — notifica admin community + evento
+        try {
+          await fetch('/api/notify-admin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'community_event', user_name: name, user_email: email, event_title: ev?.title, registered_at: new Date().toISOString() })
+          });
+        } catch(e) {}
       }
       await book(user.id, email);
     }

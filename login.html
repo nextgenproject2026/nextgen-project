@@ -149,6 +149,14 @@
       if (password.length < 8) return showMsg('reg-msg', 'Password minimo 8 caratteri.', 'error');
       const { error } = await sb.auth.signUp({ email, password, options: { data: { full_name: name } } });
       if (error) return showMsg('reg-msg', error.message, 'error');
+      // Notifica admin
+      try {
+        await fetch('/api/notify-admin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'community', user_name: name, user_email: email, registered_at: new Date().toISOString() })
+        });
+      } catch(e) {}
       showMsg('reg-msg', 'Account creato! Controlla la tua email per confermare.', 'success');
     }
   </script>
