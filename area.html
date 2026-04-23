@@ -1148,7 +1148,7 @@
 
     // ── BIGLIETTI ──
     async function loadTickets() {
-      const { data } = await sb.from('tickets').select('*, events(id, title, event_date, location, price_standard, price_early_bird, current_ticket_type, current_online_price)').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+      const { data } = await sb.from('tickets').select('*, events(id, title, event_date, location, price_standard, price_early_bird, price_onsite, price_early_bird_days, early_bird_start)').eq('user_id', currentUser.id).order('created_at', { ascending: false });
       const container = document.getElementById('tickets-container');
       if (!data?.length) {
         container.innerHTML = `<div class="empty-state"><p>Non hai ancora nessun biglietto.</p><a href="index.html#events" class="btn-primary">Scopri gli eventi</a></div>`;
@@ -1162,7 +1162,7 @@
         const isOnsite = t.payment_method === 'onsite';
         const actions = !isCancelled ? `
           <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
-            ${isOnsite ? `<button onclick="openUpgradeModal('${t.id}', '${ev?.id}', ${ev?.current_online_price || 0})" style="font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;background:transparent;color:var(--gray-2);border:1px solid var(--border);padding:5px 10px;border-radius:3px;cursor:pointer;">Paga online</button>` : ''}
+            ${isOnsite ? `<button onclick="openUpgradeModal('${t.id}', '${ev?.id}', ${ev?.price_standard || 0})" style="font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;background:transparent;color:var(--gray-2);border:1px solid var(--border);padding:5px 10px;border-radius:3px;cursor:pointer;">Paga online</button>` : ''}
             <button onclick="openTransferModal('${t.id}')" style="font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;background:transparent;color:var(--gray-2);border:1px solid var(--border);padding:5px 10px;border-radius:3px;cursor:pointer;">Cedi biglietto</button>
             <button onclick="openCancelModal('${t.id}', '${ev?.title?.replace(/'/g,"\\'")}', '${t.payment_method}')" style="font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;background:transparent;color:#ff6b6b;border:1px solid rgba(220,50,50,0.3);padding:5px 10px;border-radius:3px;cursor:pointer;">Annulla</button>
           </div>` : '';
