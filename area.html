@@ -1187,6 +1187,14 @@
       if (!name || !email || !message) return showMsg('contact-msg', 'Compila tutti i campi.', 'error');
       const { error } = await sb.from('messages').insert({ recipient_id: recipientId, sender_name: name, sender_email: email, message });
       if (error) return showMsg('contact-msg', 'Errore. Riprova.', 'error');
+      // Invia email al destinatario
+      try {
+        await fetch('/api/send-message', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ recipient_id: recipientId, sender_name: name, sender_email: email, message })
+        });
+      } catch(e) { console.log('Email error:', e); }
       showMsg('contact-msg', 'Messaggio inviato!', 'success');
       document.getElementById('c-name').value = '';
       document.getElementById('c-email').value = '';
