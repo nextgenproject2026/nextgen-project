@@ -205,6 +205,7 @@
 
     <div class="actions">
       <a href="area.html" class="btn-primary">Vai alla tua area</a>
+      <button class="btn-secondary" id="btn-calendar" onclick="addToCalendar()" style="display:none;">📅 Aggiungi al calendario</button>
       <a href="index.html" class="btn-secondary">Torna alla home</a>
     </div>
   </div>
@@ -212,9 +213,54 @@
   <script>
     const params = new URLSearchParams(window.location.search);
     const eventName = params.get('event');
+    const eventDate = params.get('date');
+    const eventLocation = params.get('location');
+
     if (eventName) {
       document.getElementById('event-name').textContent = decodeURIComponent(eventName);
-      document.title = eventName + ' — Pagamento confermato';
+      document.title = decodeURIComponent(eventName) + ' — Pagamento confermato';
+    }
+
+    if (eventDate) {
+      document.getElementById('btn-calendar').style.display = 'inline-block';
+    }
+
+    function addToCalendar() {
+      const title = decodeURIComponent(eventName || 'NextGen Event');
+      const location = decodeURIComponent(eventLocation || '');
+      const date = new Date(decodeURIComponent(eventDate));
+
+      // Formatta data per ICS: YYYYMMDDTHHMMSS
+      const pad = n => String(n).padStart(2, '0');
+      const fmt = d => `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+      const start = fmt(date);
+      const end = fmt(new Date(date.getTime() + 3 * 60 * 60 * 1000)); // +3 ore
+
+      const ics = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//NextGen Project//IT',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'BEGIN:VEVENT',
+        `DTSTART:${start}`,
+        `DTEND:${end}`,
+        `SUMMARY:${title}`,
+        `LOCATION:${location}`,
+        `DESCRIPTION:Evento NextGen Project. Porta il tuo biglietto all'ingresso. Dettagli su www.nextgen.business`,
+        `URL:https://www.nextgen.business`,
+        `ORGANIZER;CN=NextGen Project:mailto:noreply@nextgen.business`,
+        'END:VEVENT',
+        'END:VCALENDAR'
+      ].join('\r\n');
+
+      const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'nextgen-evento.ics';
+      a.click();
+      URL.revokeObjectURL(url);
     }
   </script>
 </body>
