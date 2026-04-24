@@ -100,7 +100,7 @@ module.exports = async (req, res) => {
         user_id,
         ticket_type,
       },
-      success_url: `${req.headers.origin}/grazie.html?event=${encodeURIComponent(event.title)}`,
+      success_url: `${req.headers.origin}/grazie.html?event=${encodeURIComponent(event.title)}&date=${encodeURIComponent(event.event_date)}&location=${encodeURIComponent(event.location || '')}`,
       cancel_url: `${req.headers.origin}/index.html?cancelled=true`,
     });
 

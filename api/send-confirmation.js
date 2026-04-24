@@ -59,6 +59,15 @@ module.exports = async (req, res) => {
     const isOnline = ticket.payment_method === 'online';
     const ticketCode = ticket.qr_code?.slice(0, 8).toUpperCase();
 
+    // Genera link Google Calendar
+    const eventStart = new Date(event.event_date);
+    const eventEnd = new Date(eventStart.getTime() + 3 * 60 * 60 * 1000);
+    const fmtGcal = d => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${fmtGcal(eventStart)}/${fmtGcal(eventEnd)}&location=${encodeURIComponent(event.location || '')}&details=${encodeURIComponent('Evento NextGen Project. Dettagli su www.nextgen.business')}`;
+    const calendarBlock = `<div style="margin:20px 0;text-align:center;">
+      <a href="${gcalUrl}" target="_blank" style="display:inline-block;background:transparent;color:#60a5fa;border:1px solid #1a3a5c;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:10px 20px;border-radius:4px;text-decoration:none;">📅 Aggiungi a Google Calendar</a>
+    </div>`;
+
     const subject = isOnline
       ? `✅ Pagamento confermato — ${event.title}`
       : `🎟️ Posto riservato — ${event.title}`;
@@ -136,6 +145,9 @@ module.exports = async (req, res) => {
               </td>
             </tr>
           </table>
+
+          <!-- COMMUNITY CTA -->
+          ${calendarBlock}
 
           <!-- COMMUNITY CTA -->
           <div style="background:#0d1a2e;border:1px solid #1a3a5c;border-radius:8px;padding:20px;margin:20px 0;">
