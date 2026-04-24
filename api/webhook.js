@@ -6,11 +6,6 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY
 );
 
-// Necessario per leggere il body raw di Stripe
-export const config = {
-  api: { bodyParser: false }
-};
-
 const getRawBody = (req) => new Promise((resolve, reject) => {
   let data = '';
   req.on('data', chunk => { data += chunk; });
@@ -92,4 +87,8 @@ module.exports = async (req, res) => {
   }
 
   return res.status(200).json({ received: true });
+};
+
+module.exports.config = {
+  api: { bodyParser: false }
 };
