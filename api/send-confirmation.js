@@ -93,7 +93,7 @@ module.exports = async (req, res) => {
         
         <!-- LOGO -->
         <tr><td style="padding-bottom:40px;">
-          <img src="https://nextgen.business/logo-white.png" alt="NextGen" height="28" style="display:block;">
+          <div style="margin-bottom:32px;"><span style="font-family:Helvetica,Arial,sans-serif;font-size:22px;font-weight:900;letter-spacing:-0.03em;color:#ffffff;">NEXTGEN</span></div>
         </td></tr>
 
         <!-- HEADER -->

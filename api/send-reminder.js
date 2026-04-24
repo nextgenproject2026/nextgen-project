@@ -83,7 +83,7 @@ module.exports = async (req, res) => {
       <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
 
         <tr><td style="padding-bottom:40px;">
-          <img src="https://nextgen.business/logo-white.png" alt="NextGen" height="28" style="display:block;">
+          <div style="margin-bottom:32px;"><span style="font-family:Helvetica,Arial,sans-serif;font-size:22px;font-weight:900;letter-spacing:-0.03em;color:#ffffff;">NEXTGEN</span></div>
         </td></tr>
 
         <tr><td style="background:#111111;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:40px;">
