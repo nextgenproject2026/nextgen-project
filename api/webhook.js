@@ -1,4 +1,3 @@
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { createClient } = require('@supabase/supabase-js');
 
 const supabase = createClient(
@@ -9,25 +8,13 @@ const supabase = createClient(
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).end();
 
-  const sig = req.headers['stripe-signature'];
-
-  // Leggi il body come buffer raw
-  const chunks = [];
-  for await (const chunk of req) {
-    chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
-  }
-  const rawBody = Buffer.concat(chunks);
-
   let event;
   try {
-    event = stripe.webhooks.constructEvent(
-      rawBody,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
+    // Vercel fa già il parsing del body — usiamo direttamente req.body
+    event = req.body;
+    if (!event || !event.type) throw new Error('Evento non valido');
   } catch (err) {
-    console.error('Webhook signature error:', err.message);
-    return res.status(400).json({ error: `Webhook error: ${err.message}` });
+    return res.status(400).json({ error: err.message });
   }
 
   if (event.type === 'checkout.session.completed') {
@@ -45,23 +32,17 @@ module.exports = async (req, res) => {
 
       if (ticketError) throw ticketError;
 
-      const { error: countError } = await supabase
-        .rpc('increment_tickets_sold', { event_id });
-
-      if (countError) throw countError;
+      await supabase.rpc('increment_tickets_sold', { event_id });
 
       // Invia email di conferma
       try {
-        const baseUrl = process.env.VERCEL_URL
-          ? 'https://' + process.env.VERCEL_URL
-          : 'https://www.nextgen.business';
-        await fetch(`${baseUrl}/api/send-confirmation`, {
+        await fetch('https://www.nextgen.business/api/send-confirmation', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ticket_id })
         });
       } catch (emailErr) {
-        console.error('Errore invio email:', emailErr.message);
+        console.error('Errore email:', emailErr.message);
       }
 
       console.log(`Biglietto ${ticket_id} confermato`);
