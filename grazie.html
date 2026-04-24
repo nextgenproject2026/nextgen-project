@@ -215,10 +215,20 @@
     const eventName = params.get('event');
     const eventDate = params.get('date');
     const eventLocation = params.get('location');
+    const isOnsite = params.get('onsite') === '1';
 
     if (eventName) {
       document.getElementById('event-name').textContent = decodeURIComponent(eventName);
-      document.title = decodeURIComponent(eventName) + ' — Pagamento confermato';
+      document.title = decodeURIComponent(eventName) + ' — Prenotazione confermata';
+    }
+
+    if (isOnsite) {
+      document.querySelector('h1').textContent = 'Posto riservato.';
+      document.querySelector('.message').innerHTML = `
+        Il tuo posto è confermato.<br>
+        Non vediamo l'ora di incontrarti di persona.<br><br>
+        <strong style="color:#fbbf24;">Ricorda di portare €25 all'ingresso</strong> — puoi pagare in contanti o tramite PayPal.
+      `;
     }
 
     if (eventDate) {
