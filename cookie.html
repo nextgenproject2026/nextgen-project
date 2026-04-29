@@ -7,197 +7,133 @@
   <link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@400;500;700;900&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #0a0a0a; --bg-2: #111111; --bg-3: #1a1a1a;
-      --white: #fff; --gray-1: #e8e8e8; --gray-2: #a0a0a0; --gray-3: #444;
-      --border: rgba(255,255,255,0.1); --font: 'Satoshi', sans-serif;
-    }
+    :root { --bg: #0a0a0a; --bg-2: #111111; --white: #fff; --gray-1: #e8e8e8; --gray-2: #a0a0a0; --gray-3: #444; --border: rgba(255,255,255,0.1); --font: 'Satoshi', sans-serif; }
     body { font-family: var(--font); background: var(--bg); color: var(--white); -webkit-font-smoothing: antialiased; }
     nav { display: flex; align-items: center; justify-content: space-between; padding: 20px 48px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: rgba(10,10,10,0.95); backdrop-filter: blur(12px); z-index: 50; }
     .nav-logo svg { width: 100px; }
     .nav-logo svg polygon, .nav-logo svg path { fill: var(--white); }
     .btn-home { font-family: var(--font); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: var(--white); color: var(--bg); border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; text-decoration: none; }
-
     .container { max-width: 760px; margin: 0 auto; padding: 80px 48px; }
-    .doc-label { font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gray-3); margin-bottom: 16px; }
+    .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gray-3); margin-bottom: 16px; }
     h1 { font-size: 48px; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 12px; }
-    .doc-meta { font-size: 13px; color: var(--gray-3); margin-bottom: 64px; padding-bottom: 32px; border-bottom: 1px solid var(--border); }
-    .doc-meta span { color: var(--gray-2); }
-
+    .meta { font-size: 13px; color: var(--gray-3); margin-bottom: 64px; padding-bottom: 40px; border-bottom: 1px solid var(--border); }
     h2 { font-size: 20px; font-weight: 900; letter-spacing: -0.02em; margin: 48px 0 16px; }
-    h3 { font-size: 15px; font-weight: 700; margin: 28px 0 10px; color: var(--gray-1); }
-    p { font-size: 15px; color: var(--gray-2); line-height: 1.85; margin-bottom: 16px; }
-    ul { padding-left: 20px; margin-bottom: 16px; }
-    ul li { font-size: 15px; color: var(--gray-2); line-height: 1.85; margin-bottom: 6px; }
-    a { color: var(--white); text-decoration: underline; text-underline-offset: 3px; }
-    a:hover { color: var(--gray-1); }
-
-    .info-box { background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; padding: 20px 24px; margin: 24px 0; }
-    .info-box p { margin: 0; font-size: 14px; }
-    .info-box strong { color: var(--white); }
-
-    .cookie-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px; }
-    .cookie-table th { text-align: left; padding: 10px 14px; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray-3); border-bottom: 1px solid var(--border); }
-    .cookie-table td { padding: 12px 14px; color: var(--gray-2); border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: top; line-height: 1.6; }
-    .cookie-table tr:last-child td { border-bottom: none; }
-    .badge { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 7px; border-radius: 2px; }
-    .badge.tecnico { background: rgba(96,165,250,0.15); color: #60a5fa; }
-    .badge.funzionale { background: rgba(74,222,128,0.12); color: #4ade80; }
-    .badge.terze-parti { background: rgba(251,191,36,0.12); color: #fbbf24; }
-
+    h3 { font-size: 15px; font-weight: 700; color: var(--gray-1); margin: 28px 0 10px; }
+    p { font-size: 15px; color: var(--gray-2); line-height: 1.8; margin-bottom: 16px; }
+    ul { margin: 0 0 16px 0; padding-left: 20px; }
+    ul li { font-size: 15px; color: var(--gray-2); line-height: 1.8; margin-bottom: 6px; }
+    a { color: var(--gray-1); }
+    .info-box { background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; padding: 24px; margin: 32px 0; }
+    .info-box p { margin: 0; font-size: 14px; line-height: 1.9; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px; }
+    th { text-align: left; padding: 10px 14px; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray-3); border-bottom: 1px solid var(--border); }
+    td { padding: 12px 14px; color: var(--gray-2); border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: top; }
+    td:first-child { color: var(--white); font-weight: 700; }
+    .divider { height: 1px; background: var(--border); margin: 48px 0; }
     footer { border-top: 1px solid var(--border); padding: 32px 48px; text-align: center; }
-    footer p { font-size: 12px; color: var(--gray-3); }
-    footer a { color: var(--gray-3); }
-
-    @media (max-width: 768px) {
-      nav { padding: 16px 20px; }
-      .container { padding: 48px 20px; }
-      h1 { font-size: 32px; }
-      footer { padding: 24px 20px; }
-      .cookie-table { font-size: 12px; }
-    }
+    footer p { font-size: 12px; color: var(--gray-3); margin: 0; }
+    @media (max-width: 768px) { .container { padding: 48px 24px; } nav { padding: 16px 20px; } h1 { font-size: 32px; } table { font-size: 12px; } }
   </style>
+  <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
   <nav>
     <a href="index.html" class="nav-logo">
-      <svg viewBox="0 0 629.36 216.06" xmlns="http://www.w3.org/2000/svg">
-        <polygon points="526.76 203.06 527.86 201.96 527.86 131.95 582.65 202.02 583.69 203.06 600.13 203.06 601.17 202.02 601.17 101.52 600.07 100.42 584.68 100.42 583.58 101.52 583.58 171.53 527.63 101.51 526.53 100.42 511.37 100.42 510.27 101.52 510.27 202.02 511.31 203.06 526.76 203.06"/>
-        <polygon points="210.94 115.99 251.12 64.16 212.05 13 233.95 13 262.17 49.9 290.76 13 312.69 13 273.32 64.5 312.68 115.99 290.76 115.99 262.37 78.84 233.97 115.99 210.94 115.99"/>
-        <polygon points="498.96 186.23 484.97 203.05 429.99 203.05 428.89 201.95 428.89 101.16 429.99 100.06 493.77 100.06 494.87 101.16 494.87 117.28 493.77 118.38 447.22 118.38 447.22 142.94 484.24 142.94 485.34 144.04 485.34 160.17 484.24 161.27 447.22 161.27 447.22 184.73 498.17 184.73 498.96 186.23"/>
-        <path d="M369.15,57.72v-26.2h33.36l-15.03-18.33h-64.51l-1.1,1.1v16.13l1.1,1.1h27.49v68.18c-21.85,4.27-37.9,23.65-40.32,45.45H14.66V0H0v159.07h310.86c10.92,71.81,113.25,53.99,103.37-16.86h-36.29l-12.1,18.33h29.32c-6.78,27.96-40.54,38.19-59.25,14.17-27.88-35.78,20.13-81.84,52.91-47.22l10.45-13.09c-6.83-9.84-19.12-13.28-30.14-15.93v-26.82h245.56v144.42h14.66V57.72h-260.22Z"/>
-        <polygon points="205.79 99.18 191.8 116 136.82 116 135.72 114.9 135.72 14.11 136.82 13.01 200.6 13.01 201.7 14.11 201.7 30.23 200.6 31.33 154.05 31.33 154.05 55.89 191.07 55.89 192.17 56.99 192.17 73.12 191.07 74.22 154.05 74.22 154.05 97.68 205 97.68 205.79 99.18"/>
-        <polygon points="44.75 116 45.85 114.89 45.85 44.64 100.83 114.95 101.87 116 118.37 116 120.41 114.95 120.41 14.11 118.31 13.01 102.86 13.01 101.76 14.11 101.76 84.36 45.62 14.1 44.51 13.01 29.3 13.01 28.19 14.11 28.19 114.95 29.24 116 44.75 116"/>
-      </svg>
+      <svg viewBox="0 0 629.36 216.06" xmlns="http://www.w3.org/2000/svg"><polygon points="526.76 203.06 527.86 201.96 527.86 131.95 582.65 202.02 583.69 203.06 600.13 203.06 601.17 202.02 601.17 101.52 600.07 100.42 584.68 100.42 583.58 101.52 583.58 171.53 527.63 101.51 526.53 100.42 511.37 100.42 510.27 101.52 510.27 202.02 511.31 203.06 526.76 203.06"/><polygon points="210.94 115.99 251.12 64.16 212.05 13 233.95 13 262.17 49.9 290.76 13 312.69 13 273.32 64.5 312.68 115.99 290.76 115.99 262.37 78.84 233.97 115.99 210.94 115.99"/><polygon points="498.96 186.23 484.97 203.05 429.99 203.05 428.89 201.95 428.89 101.16 429.99 100.06 493.77 100.06 494.87 101.16 494.87 117.28 493.77 118.38 447.22 118.38 447.22 142.94 484.24 142.94 485.34 144.04 485.34 160.17 484.24 161.27 447.22 161.27 447.22 184.73 498.17 184.73 498.96 186.23"/><path d="M369.15,57.72v-26.2h33.36l-15.03-18.33h-64.51l-1.1,1.1v16.13l1.1,1.1h27.49v68.18c-21.85,4.27-37.9,23.65-40.32,45.45H14.66V0H0v159.07h310.86c10.92,71.81,113.25,53.99,103.37-16.86h-36.29l-12.1,18.33h29.32c-6.78,27.96-40.54,38.19-59.25,14.17-27.88-35.78,20.13-81.84,52.91-47.22l10.45-13.09c-6.83-9.84-19.12-13.28-30.14-15.93v-26.82h245.56v144.42h14.66V57.72h-260.22Z"/><polygon points="205.79 99.18 191.8 116 136.82 116 135.72 114.9 135.72 14.11 136.82 13.01 200.6 13.01 201.7 14.11 201.7 30.23 200.6 31.33 154.05 31.33 154.05 55.89 191.07 55.89 192.17 56.99 192.17 73.12 191.07 74.22 154.05 74.22 154.05 97.68 205 97.68 205.79 99.18"/><polygon points="44.75 116 45.85 114.89 45.85 44.64 100.83 114.95 101.87 116 118.37 116 120.41 114.95 120.41 14.11 118.31 13.01 102.86 13.01 101.76 14.11 101.76 84.36 45.62 14.1 44.51 13.01 29.3 13.01 28.19 14.11 28.19 114.95 29.24 116 44.75 116"/></svg>
     </a>
     <a href="index.html" class="btn-home">← Home</a>
   </nav>
 
   <div class="container">
-    <div class="doc-label">Documento legale</div>
+    <div class="eyebrow">Informativa legale</div>
     <h1>Cookie Policy</h1>
-    <div class="doc-meta">Ultimo aggiornamento: <span>24 aprile 2026</span> &nbsp;·&nbsp; Versione <span>1.0</span></div>
+    <p class="meta">Ultimo aggiornamento: aprile 2026 · Versione 1.0</p>
 
-    <p>La presente Cookie Policy descrive come Azazel Srls utilizza i cookie e tecnologie simili sulla piattaforma NextGen Project (<a href="https://www.nextgen.business">www.nextgen.business</a>), in conformità al Regolamento UE 2016/679 (GDPR) e al D.Lgs. 196/2003 (Codice Privacy) come modificato dal D.Lgs. 101/2018.</p>
+    <div class="info-box">
+      <p><strong style="color:#fff;">Titolare del trattamento</strong><br>
+      Azazel S.r.l.s. · Piazza della Serenissima 60, 31033 Castelfranco Veneto (TV)<br>
+      P.IVA e C.F.: 05145800263<br>
+      Email: <a href="mailto:amministrazione@azazel.agency">amministrazione@azazel.agency</a> · PEC: <a href="mailto:azazel@legalmail.it">azazel@legalmail.it</a></p>
+    </div>
 
     <h2>1. Cosa sono i cookie</h2>
-    <p>I cookie sono piccoli file di testo che vengono depositati sul dispositivo dell'utente (computer, smartphone, tablet) quando visita un sito web. Permettono al sito di ricordare le azioni e le preferenze dell'utente nel tempo, evitando di doverle reinserire ad ogni visita.</p>
-    <p>Oltre ai cookie, utilizziamo tecnologie simili come il <strong>localStorage</strong> e il <strong>sessionStorage</strong>, che funzionano in modo analogo ma memorizzano i dati direttamente nel browser senza inviarli al server.</p>
+    <p>I cookie sono piccoli file di testo che i siti web inviano al browser dell'utente e vengono memorizzati sul dispositivo. Permettono al sito di riconoscere l'utente nelle visite successive e di offrire un'esperienza personalizzata e funzionale.</p>
 
-    <h2>2. Tipologie di cookie utilizzati</h2>
+    <h2>2. Cookie utilizzati da NextGen Project</h2>
+    <p>NextGen Project utilizza esclusivamente cookie tecnici e funzionali, strettamente necessari al funzionamento della piattaforma. Non vengono utilizzati cookie di profilazione, tracciamento o marketing.</p>
 
-    <h3>2.1 Cookie tecnici e di sessione (necessari)</h3>
-    <p>Questi cookie sono strettamente necessari al funzionamento della piattaforma e non richiedono il consenso dell'utente. Senza di essi, alcune funzionalità non sarebbero disponibili.</p>
-
-    <table class="cookie-table">
+    <h3>2.1 Cookie tecnici (necessari)</h3>
+    <table>
       <thead>
         <tr>
           <th>Nome</th>
           <th>Fornitore</th>
           <th>Scopo</th>
           <th>Durata</th>
-          <th>Tipo</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td><code>sb-[ref]-auth-token</code></td>
+          <td>sb-[id]-auth-token</td>
           <td>Supabase</td>
-          <td>Gestione sessione di autenticazione utente</td>
-          <td>1 settimana</td>
-          <td><span class="badge tecnico">Tecnico</span></td>
+          <td>Gestione sessione autenticata dell'utente</td>
+          <td>Sessione / 7 giorni</td>
         </tr>
         <tr>
-          <td><code>sb-[ref]-auth-token.0</code><br><code>sb-[ref]-auth-token.1</code></td>
+          <td>sb-[id]-auth-token-code-verifier</td>
           <td>Supabase</td>
-          <td>Frammenti del token di autenticazione (sessione suddivisa)</td>
+          <td>Verifica sicurezza del flusso di autenticazione (PKCE)</td>
           <td>Sessione</td>
-          <td><span class="badge tecnico">Tecnico</span></td>
+        </tr>
+        <tr>
+          <td>__stripe_mid</td>
+          <td>Stripe</td>
+          <td>Prevenzione frodi nei pagamenti</td>
+          <td>1 anno</td>
+        </tr>
+        <tr>
+          <td>__stripe_sid</td>
+          <td>Stripe</td>
+          <td>Identificazione sessione di pagamento</td>
+          <td>30 minuti</td>
         </tr>
       </tbody>
     </table>
 
-    <h3>2.2 Cookie funzionali</h3>
-    <p>Questi cookie migliorano l'esperienza d'uso ricordando le preferenze dell'utente.</p>
+    <h3>2.2 Cookie di terze parti</h3>
+    <p>I cookie di Stripe vengono impostati esclusivamente durante il processo di pagamento, per garantire la sicurezza delle transazioni e prevenire le frodi. Stripe è certificato PCI DSS e opera in conformità al GDPR.</p>
 
-    <table class="cookie-table">
-      <thead>
-        <tr>
-          <th>Nome</th>
-          <th>Fornitore</th>
-          <th>Scopo</th>
-          <th>Durata</th>
-          <th>Tipo</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>localStorage</td>
-          <td>NextGen</td>
-          <td>Preferenze interfaccia e stato della sessione</td>
-          <td>Persistente</td>
-          <td><span class="badge funzionale">Funzionale</span></td>
-        </tr>
-      </tbody>
-    </table>
+    <h2>3. Cookie non utilizzati</h2>
+    <p>NextGen Project <strong style="color:#fff;">non utilizza</strong>:</p>
+    <ul>
+      <li>Cookie di profilazione o tracciamento comportamentale</li>
+      <li>Cookie di social media (Facebook Pixel, LinkedIn Insight, ecc.)</li>
+      <li>Cookie di analytics (Google Analytics, ecc.)</li>
+      <li>Cookie pubblicitari</li>
+    </ul>
 
-    <h3>2.3 Cookie di terze parti</h3>
-    <p>Durante l'utilizzo del servizio di pagamento, Stripe potrebbe depositare cookie propri sul dispositivo dell'utente.</p>
+    <h2>4. Base giuridica</h2>
+    <p>I cookie tecnici e funzionali descritti sono strettamente necessari al funzionamento del servizio e non richiedono il consenso dell'utente ai sensi dell'art. 122 del D.Lgs. 196/2003 e del Provvedimento del Garante Privacy dell'8 maggio 2014.</p>
 
-    <table class="cookie-table">
-      <thead>
-        <tr>
-          <th>Nome</th>
-          <th>Fornitore</th>
-          <th>Scopo</th>
-          <th>Durata</th>
-          <th>Tipo</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>__stripe_mid, __stripe_sid</td>
-          <td>Stripe Inc.</td>
-          <td>Prevenzione delle frodi e sicurezza nei pagamenti</td>
-          <td>1 anno / Sessione</td>
-          <td><span class="badge terze-parti">Terze parti</span></td>
-        </tr>
-      </tbody>
-    </table>
-
-    <p>Per maggiori informazioni sui cookie di Stripe, consulta la <a href="https://stripe.com/it/privacy" target="_blank">Privacy Policy di Stripe</a>.</p>
-
-    <h2>3. Cookie analitici</h2>
-    <p>Attualmente la piattaforma NextGen Project non utilizza cookie analitici o di profilazione di terze parti (es. Google Analytics, Facebook Pixel). Qualora venissero introdotti in futuro, la presente Cookie Policy sarà aggiornata di conseguenza e sarà richiesto il consenso dell'utente.</p>
-
-    <h2>4. Gestione e disabilitazione dei cookie</h2>
-    <p>L'utente può gestire o disabilitare i cookie attraverso le impostazioni del proprio browser. Di seguito i link alle guide dei principali browser:</p>
+    <h2>5. Come gestire i cookie</h2>
+    <p>L'utente può gestire o disabilitare i cookie tramite le impostazioni del proprio browser. Si avverte che la disabilitazione dei cookie tecnici potrebbe compromettere il corretto funzionamento della piattaforma, in particolare le funzionalità di accesso e pagamento.</p>
     <ul>
       <li><a href="https://support.google.com/chrome/answer/95647" target="_blank">Google Chrome</a></li>
       <li><a href="https://support.mozilla.org/it/kb/Attivare%20e%20disattivare%20i%20cookie" target="_blank">Mozilla Firefox</a></li>
       <li><a href="https://support.apple.com/it-it/guide/safari/sfri11471/mac" target="_blank">Apple Safari</a></li>
-      <li><a href="https://support.microsoft.com/it-it/topic/eliminare-e-gestire-i-cookie-168dab11-0753-043d-7c16-ede5947fc64d" target="_blank">Microsoft Edge</a></li>
+      <li><a href="https://support.microsoft.com/it-it/windows/eliminare-e-gestire-i-cookie" target="_blank">Microsoft Edge</a></li>
     </ul>
-    <p>Si avverte che la disabilitazione dei cookie tecnici potrebbe compromettere il corretto funzionamento della piattaforma, in particolare delle funzionalità di accesso e autenticazione.</p>
 
-    <h2>5. Trasferimento dei dati all'estero</h2>
-    <p>Alcuni fornitori di cookie (Supabase, Vercel, Stripe) sono basati negli Stati Uniti. Il trasferimento dei dati avviene nel rispetto delle garanzie previste dal GDPR, attraverso le clausole contrattuali standard approvate dalla Commissione Europea o altri meccanismi di adeguatezza riconosciuti.</p>
+    <h2>6. Modifiche alla Cookie Policy</h2>
+    <p>Il Titolare si riserva di aggiornare la presente Cookie Policy. Le modifiche saranno comunicate tramite avviso nella piattaforma.</p>
 
-    <h2>6. Aggiornamenti alla Cookie Policy</h2>
-    <p>La presente Cookie Policy può essere aggiornata periodicamente per riflettere modifiche tecniche o normative. La data dell'ultimo aggiornamento è indicata in cima alla pagina. In caso di modifiche sostanziali, gli utenti registrati saranno notificati tramite email.</p>
-
-    <h2>7. Contatti</h2>
-    <div class="info-box">
-      <p>Per qualsiasi domanda relativa ai cookie e al trattamento dei dati:<br><br>
-      <strong>Azazel Srls</strong> — Titolare del trattamento<br>
-      Piazza della Serenissima 60, 31033 Castelfranco Veneto (TV)<br>
-      Email: <a href="mailto:amministrazione@azazel.agency">amministrazione@azazel.agency</a><br>
-      PEC: <a href="mailto:azazel@legalmail.it">azazel@legalmail.it</a></p>
-    </div>
+    <div class="divider"></div>
+    <p style="font-size:13px;color:var(--gray-3);">Per informazioni: <a href="mailto:amministrazione@azazel.agency">amministrazione@azazel.agency</a> · Azazel S.r.l.s. · P.IVA 05145800263</p>
+    <p style="font-size:13px;color:var(--gray-3);margin-top:12px;">Consulta anche la nostra <a href="privacy.html">Privacy Policy</a>.</p>
   </div>
 
   <footer>
-    <p>© 2026 NextGen Project · Gestito da Azazel Srls &nbsp;·&nbsp; <a href="privacy.html">Privacy Policy</a> &nbsp;·&nbsp; <a href="cookie.html">Cookie Policy</a></p>
+    <p>© 2026 NextGen Project · Gestito da Azazel S.r.l.s. · <a href="privacy.html" style="color:var(--gray-3);">Privacy Policy</a> · <a href="cookie.html" style="color:var(--gray-3);">Cookie Policy</a></p>
   </footer>
 </body>
 </html>
