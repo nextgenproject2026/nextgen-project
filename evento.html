@@ -446,8 +446,15 @@
         }
         user = si.user;
       } else {
-        user = su.user;
-        // Nuovo utente — notifica admin community + evento
+        // Fai login subito per avere sessione attiva
+        const { data: si, error: sie } = await sb.auth.signInWithPassword({ email, password: pw });
+        if (sie || !si.user) {
+          document.getElementById('btn-register').disabled = false;
+          document.getElementById('btn-register').textContent = 'Registrati e prenota';
+          return showMsg('msg-register', 'Account creato! Controlla email e poi accedi per completare.', 'error');
+        }
+        user = si.user;
+        // Notifica admin community + evento
         try {
           await fetch('/api/notify-admin', {
             method: 'POST',
