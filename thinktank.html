@@ -198,11 +198,11 @@
   .section--light .eyebrow { color: rgba(0,0,0,0.55); }
   .section--light .eyebrow::before, .section--light .eyebrow .sep { background: rgba(0,0,0,0.55); }
   .how__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-top: 1rem; list-style: none; }
-  .phase-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 2rem 1.75rem; transition: border-color 0.25s, transform 0.25s, background 0.25s; }
-  .phase-card:hover { border-color: var(--border-strong); background: rgba(255,255,255,0.06); transform: translateY(-3px); }
-  .phase-card__num { font-size: 3rem; font-weight: 900; color: var(--ink-watermark); line-height: 1; margin-bottom: 1.25rem; letter-spacing: -0.03em; }
-  .phase-card h3 { color: var(--white); margin-bottom: 0.75rem; font-size: 1.05rem; font-weight: 700; line-height: 1.2; }
-  .phase-card p { font-size: 0.92rem; line-height: 1.6; color: var(--ink-muted); }
+  .phase-card { background: rgba(0,0,0,0.025); border: 1px solid rgba(0,0,0,0.08); border-radius: var(--radius-md); padding: 2rem 1.75rem; transition: border-color 0.25s, transform 0.25s, background 0.25s; }
+  .phase-card:hover { border-color: rgba(0,0,0,0.22); background: rgba(0,0,0,0.045); transform: translateY(-3px); }
+  .phase-card__num { font-size: 3rem; font-weight: 900; color: rgba(0,0,0,0.16); line-height: 1; margin-bottom: 1.25rem; letter-spacing: -0.03em; }
+  .phase-card h3 { color: var(--black); margin-bottom: 0.75rem; font-size: 1.05rem; font-weight: 700; line-height: 1.2; }
+  .phase-card p { font-size: 0.92rem; line-height: 1.6; color: rgba(0,0,0,0.6); }
 
   /* ACCESS */
   .access__inner { max-width: 800px; }
@@ -513,14 +513,14 @@
 </section>
 
 <!-- COME FUNZIONA -->
-<section class="how" id="come-funziona">
+<section class="how section--light" id="come-funziona">
   <div class="container">
     <div class="section-head">
       <p class="eyebrow">Come funziona</p>
       <h2>
         <span class="line">Un'architettura di confronto</span>
-        <span class="line watermark">strutturata, guidata</span>
-        <span class="line">e assistita.</span>
+        <span class="line" style="color:rgba(0,0,0,0.22);">strutturata, guidata</span>
+        <span class="line" style="color:rgba(0,0,0,0.22);">e assistita.</span>
       </h2>
       <p>Ogni ThinkTank si sviluppa in quattro fasi, facilitate da un moderatore esperto.</p>
     </div>
