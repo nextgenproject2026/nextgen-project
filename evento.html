@@ -246,10 +246,33 @@
       if (user) document.getElementById('nav-area-btn').textContent = 'La mia area';
       const id = new URLSearchParams(window.location.search).get('id');
       if (!id) return;
-      const { data } = await sb.from('events_with_availability').select('*').eq('id', id).single();
-      if (!data) { document.getElementById('ev-title').textContent = 'Evento non trovato'; return; }
-      ev = data;
-      renderEvent(data);
+
+      // Admin può vedere anche le bozze
+      let isAdmin = false;
+      if (user) {
+        const { data: profile } = await sb.from('profiles').select('is_admin').eq('id', user.id).single();
+        isAdmin = profile?.is_admin || false;
+      }
+
+      let eventData;
+      if (isAdmin) {
+        const { data } = await sb.from('events').select('*').eq('id', id).single();
+        if (data) data.tickets_available = data.capacity - data.tickets_sold;
+        eventData = data;
+        if (eventData && !eventData.is_published) {
+          const banner = document.createElement('div');
+          banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#f5e445;color:#000;text-align:center;padding:8px;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;';
+          banner.textContent = '⚠ Anteprima bozza — non visibile al pubblico';
+          document.body.prepend(banner);
+        }
+      } else {
+        const { data } = await sb.from('events_with_availability').select('*').eq('id', id).single();
+        eventData = data;
+      }
+
+      if (!eventData) { document.getElementById('ev-title').textContent = 'Evento non trovato'; return; }
+      ev = eventData;
+      renderEvent(eventData);
     }
 
     function renderEvent(d) {
