@@ -367,37 +367,101 @@
         <!-- FORM CREA EVENTO -->
         <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:4px;padding:32px;margin-bottom:40px;">
           <div class="section-label" style="margin-bottom:24px;">Crea nuovo evento</div>
-          <div class="form-grid">
-            <div class="form-group full"><label>Titolo</label><input type="text" id="ev-title" placeholder="NextGen Meetup #3"></div>
-            <div class="form-group full"><label>Descrizione</label><textarea id="ev-desc" placeholder="Di cosa si tratta..."></textarea></div>
-            <div class="form-group"><label>Data e ora</label><input type="datetime-local" id="ev-date"></div>
-            <div class="form-group"><label>Location</label><input type="text" id="ev-location" placeholder="Castelli in Aria, Castelfranco Veneto"></div>
-            <div class="form-group"><label>Prezzo early bird (€)</label><input type="number" id="ev-price-eb" placeholder="18" value="18" min="0" step="0.5"></div>
-            <div class="form-group"><label>Prezzo standard (€)</label><input type="number" id="ev-price-std" placeholder="20" value="20" min="0" step="0.5"></div>
-            <div class="form-group"><label>Prezzo in sede (€)</label><input type="number" id="ev-price-site" placeholder="25" value="25" min="0" step="0.5"></div>
-            <div class="form-group"><label>Giorni early bird</label><input type="number" id="ev-eb-days" placeholder="5" value="5" min="1"></div>
-            <div class="form-group"><label>Apertura prenotazioni</label><input type="datetime-local" id="ev-open-at"></div>
-            <div class="form-group"><label>Capienza massima</label><input type="number" id="ev-capacity" placeholder="100" value="100" min="1"></div>
-            <div class="form-group"><label>Nome ospite</label><input type="text" id="ev-speaker-name" placeholder="Nome Cognome"></div>
-            <div class="form-group"><label>Bio ospite</label><input type="text" id="ev-speaker-bio" placeholder="CEO di..."></div>
-            <div class="form-group full"><label>Programma serata (agenda)</label><textarea id="ev-agenda" placeholder="21:00 - Aperitivo&#10;21:30 - Presentazioni&#10;22:00 - Talk"></textarea></div>
-            <div class="form-group full"><label>Cover immagine</label>
-              <div style="display:flex;gap:10px;align-items:center;">
-                <input type="file" id="ev-cover-file" accept="image/*" onchange="previewCover(this)" style="flex:1;">
-                <div id="ev-cover-preview" style="width:80px;height:45px;background:var(--bg-3);border:1px solid var(--border);border-radius:4px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--gray-3);">Anteprima</div>
+
+          <!-- STEP 1: Scelta tipo -->
+          <div id="ev-type-step">
+            <div style="font-size:13px;color:var(--gray-2);margin-bottom:18px;">Che tipo di evento vuoi creare?</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:560px;">
+
+              <button onclick="selectEventType('meetup')" style="font-family:var(--font);background:var(--bg-3);border:1px solid var(--border);border-radius:4px;padding:22px 20px;text-align:left;cursor:pointer;transition:border-color 0.2s,background 0.2s;" class="ev-type-card" id="type-card-meetup">
+                <div style="font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--gray-3);margin-bottom:8px;">Formato classico</div>
+                <div style="font-size:16px;font-weight:900;color:var(--white);letter-spacing:-0.02em;margin-bottom:6px;">Meetup</div>
+                <div style="font-size:12px;color:var(--gray-2);line-height:1.5;">Aperitivo, speaker, networking. Fino a 100+ persone. Prezzi EB / standard / onsite.</div>
+              </button>
+
+              <button onclick="selectEventType('thinktank')" style="font-family:var(--font);background:var(--bg-3);border:1px solid var(--border);border-radius:4px;padding:22px 20px;text-align:left;cursor:pointer;transition:border-color 0.2s,background 0.2s;" class="ev-type-card" id="type-card-thinktank">
+                <div style="font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--gray-3);margin-bottom:8px;">Nuovo formato</div>
+                <div style="font-size:16px;font-weight:900;color:var(--white);letter-spacing:-0.02em;margin-bottom:6px;">ThinkTank</div>
+                <div style="font-size:12px;color:var(--gray-2);line-height:1.5;">Tavola rotonda ristretta. Max 30 posti. Candidatura o prezzo unico, niente spettatori.</div>
+              </button>
+
+            </div>
+          </div>
+
+          <!-- STEP 2a: Form Meetup -->
+          <div id="ev-form-meetup" style="display:none;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+              <button onclick="resetEventType()" style="font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;background:transparent;color:var(--gray-2);border:1px solid var(--border);padding:6px 12px;border-radius:4px;cursor:pointer;">← Cambia tipo</button>
+              <span style="font-size:12px;color:var(--gray-3);">Meetup</span>
+            </div>
+            <div class="form-grid">
+              <div class="form-group full"><label>Titolo</label><input type="text" id="ev-title" placeholder="NextGen Meetup #5"></div>
+              <div class="form-group full"><label>Descrizione</label><textarea id="ev-desc" placeholder="Di cosa si tratta..."></textarea></div>
+              <div class="form-group"><label>Data e ora</label><input type="datetime-local" id="ev-date"></div>
+              <div class="form-group"><label>Location</label><input type="text" id="ev-location" placeholder="Castelli in Aria, Castelfranco Veneto"></div>
+              <div class="form-group"><label>Prezzo early bird (€)</label><input type="number" id="ev-price-eb" placeholder="18" value="18" min="0" step="0.5"></div>
+              <div class="form-group"><label>Prezzo standard (€)</label><input type="number" id="ev-price-std" placeholder="20" value="20" min="0" step="0.5"></div>
+              <div class="form-group"><label>Prezzo in sede (€)</label><input type="number" id="ev-price-site" placeholder="25" value="25" min="0" step="0.5"></div>
+              <div class="form-group"><label>Giorni early bird</label><input type="number" id="ev-eb-days" placeholder="5" value="5" min="1"></div>
+              <div class="form-group"><label>Apertura prenotazioni</label><input type="datetime-local" id="ev-open-at"></div>
+              <div class="form-group"><label>Capienza massima</label><input type="number" id="ev-capacity" placeholder="100" value="100" min="1"></div>
+              <div class="form-group"><label>Nome ospite</label><input type="text" id="ev-speaker-name" placeholder="Nome Cognome"></div>
+              <div class="form-group"><label>Bio ospite</label><input type="text" id="ev-speaker-bio" placeholder="CEO di..."></div>
+              <div class="form-group full"><label>Programma serata (agenda)</label><textarea id="ev-agenda" placeholder="21:00 - Aperitivo&#10;21:30 - Presentazioni&#10;22:00 - Talk"></textarea></div>
+              <div class="form-group full"><label>Cover immagine</label>
+                <div style="display:flex;gap:10px;align-items:center;">
+                  <input type="file" id="ev-cover-file" accept="image/*" onchange="previewCover(this)" style="flex:1;">
+                  <div id="ev-cover-preview" style="width:80px;height:45px;background:var(--bg-3);border:1px solid var(--border);border-radius:4px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--gray-3);">Anteprima</div>
+                </div>
+                <input type="hidden" id="ev-cover">
               </div>
-              <input type="hidden" id="ev-cover">
+              <div class="form-group"><label>Stato</label>
+                <select id="ev-status">
+                  <option value="false">Bozza</option>
+                  <option value="true">Pubblica subito</option>
+                </select>
+              </div>
             </div>
-            <div class="form-group"><label>Stato</label>
-              <select id="ev-status">
-                <option value="false">Bozza</option>
-                <option value="true">Pubblica subito</option>
-              </select>
+            <div style="display:flex;gap:12px;margin-top:24px;">
+              <button class="btn-primary" onclick="createNewEvent()">Crea Meetup</button>
             </div>
           </div>
-          <div style="display:flex;gap:12px;margin-top:24px;">
-            <button class="btn-primary" onclick="createNewEvent()">Crea evento</button>
+
+          <!-- STEP 2b: Form ThinkTank -->
+          <div id="ev-form-thinktank" style="display:none;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+              <button onclick="resetEventType()" style="font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;background:transparent;color:var(--gray-2);border:1px solid var(--border);padding:6px 12px;border-radius:4px;cursor:pointer;">← Cambia tipo</button>
+              <span style="font-size:12px;color:var(--gray-3);">ThinkTank</span>
+            </div>
+            <div class="form-grid">
+              <div class="form-group full"><label>Titolo</label><input type="text" id="tt-title" placeholder="NextGen ThinkTank #1"></div>
+              <div class="form-group full"><label>Descrizione</label><textarea id="tt-desc" placeholder="Un tavolo di confronto per..."></textarea></div>
+              <div class="form-group"><label>Data e ora</label><input type="datetime-local" id="tt-date"></div>
+              <div class="form-group"><label>Location</label><input type="text" id="tt-location" placeholder="Nome posto, Castelfranco Veneto"></div>
+              <div class="form-group"><label>Prezzo (€)</label><input type="number" id="tt-price" placeholder="80" value="80" min="0" step="1"></div>
+              <div class="form-group"><label>Posti disponibili (max 30)</label><input type="number" id="tt-capacity" placeholder="30" value="30" min="1" max="30"></div>
+              <div class="form-group"><label>Apertura prenotazioni</label><input type="datetime-local" id="tt-open-at"></div>
+              <div class="form-group"><label>Tema / focus</label><input type="text" id="tt-theme" placeholder="es. Crescita PMI nel territorio veneto"></div>
+              <div class="form-group full"><label>Programma (agenda)</label><textarea id="tt-agenda" placeholder="19:00 - Accoglienza&#10;19:30 - Discussione tavolo&#10;21:00 - Cena"></textarea></div>
+              <div class="form-group full"><label>Cover immagine</label>
+                <div style="display:flex;gap:10px;align-items:center;">
+                  <input type="file" id="tt-cover-file" accept="image/*" onchange="previewCoverTT(this)" style="flex:1;">
+                  <div id="tt-cover-preview" style="width:80px;height:45px;background:var(--bg-3);border:1px solid var(--border);border-radius:4px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--gray-3);">Anteprima</div>
+                </div>
+                <input type="hidden" id="tt-cover">
+              </div>
+              <div class="form-group"><label>Stato</label>
+                <select id="tt-status">
+                  <option value="false">Bozza</option>
+                  <option value="true">Pubblica subito</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:24px;">
+              <button class="btn-primary" onclick="createNewThinkTank()">Crea ThinkTank</button>
+            </div>
           </div>
+
           <div class="msg" id="event-msg"></div>
         </div>
 
@@ -626,6 +690,41 @@
       }
     }
 
+    /* ── TIPO EVENTO ── */
+    function selectEventType(type) {
+      document.getElementById('ev-type-step').style.display = 'none';
+      document.getElementById('ev-form-meetup').style.display = type === 'meetup' ? 'block' : 'none';
+      document.getElementById('ev-form-thinktank').style.display = type === 'thinktank' ? 'block' : 'none';
+    }
+    function resetEventType() {
+      document.getElementById('ev-type-step').style.display = 'block';
+      document.getElementById('ev-form-meetup').style.display = 'none';
+      document.getElementById('ev-form-thinktank').style.display = 'none';
+      const msg = document.getElementById('event-msg');
+      msg.className = 'msg'; msg.textContent = '';
+    }
+
+    function previewCoverTT(input) {
+      const preview = document.getElementById('tt-cover-preview');
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => { preview.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">`; };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    async function uploadCoverTTIfNeeded() {
+      const fileInput = document.getElementById('tt-cover-file');
+      if (!fileInput.files || !fileInput.files[0]) return null;
+      const file = fileInput.files[0];
+      const ext = file.name.split('.').pop();
+      const path = `covers/tt_${Date.now()}.${ext}`;
+      const { error } = await sb.storage.from('events').upload(path, file, { upsert: true });
+      if (error) { showMsg('event-msg', 'Errore upload immagine: ' + error.message, 'error'); return null; }
+      const { data } = sb.storage.from('events').getPublicUrl(path);
+      return data.publicUrl;
+    }
+
     async function createNewEvent() {
       const title = document.getElementById('ev-title').value;
       const date = document.getElementById('ev-date').value;
@@ -635,6 +734,7 @@
       const priceSite = Math.round(parseFloat(document.getElementById('ev-price-site').value || 25) * 100);
       const coverUrl = await uploadCoverIfNeeded();
       const { data, error } = await sb.from('events').insert({
+        event_type: 'meetup',
         title,
         description: document.getElementById('ev-desc').value,
         event_date: date,
@@ -652,7 +752,37 @@
         is_published: document.getElementById('ev-status').value === 'true'
       }).select().single();
       if (error) return showMsg('event-msg', 'Errore: ' + error.message, 'error');
-      showMsg('event-msg', 'Evento creato con successo!', 'success');
+      showMsg('event-msg', 'Meetup creato con successo!', 'success');
+      resetEventType();
+      loadAdminEvents();
+    }
+
+    async function createNewThinkTank() {
+      const title = document.getElementById('tt-title').value.trim();
+      const date = document.getElementById('tt-date').value;
+      if (!title || !date) return showMsg('event-msg', 'Titolo e data obbligatori.', 'error');
+      const price = Math.round(parseFloat(document.getElementById('tt-price').value || 80) * 100);
+      const capacity = Math.min(parseInt(document.getElementById('tt-capacity').value || 30), 30);
+      const coverUrl = await uploadCoverTTIfNeeded();
+      const { data, error } = await sb.from('events').insert({
+        event_type: 'thinktank',
+        title,
+        description: document.getElementById('tt-desc').value,
+        event_date: date,
+        location: document.getElementById('tt-location').value,
+        price_standard: price,
+        price_early_bird: price,
+        price_onsite: price,
+        early_bird_start: document.getElementById('tt-open-at').value || null,
+        capacity,
+        speaker_name: document.getElementById('tt-theme').value || null,
+        program: document.getElementById('tt-agenda').value || null,
+        cover_image_url: coverUrl,
+        is_published: document.getElementById('tt-status').value === 'true'
+      }).select().single();
+      if (error) return showMsg('event-msg', 'Errore: ' + error.message, 'error');
+      showMsg('event-msg', 'ThinkTank creato con successo!', 'success');
+      resetEventType();
       loadAdminEvents();
     }
 
@@ -669,10 +799,14 @@
         const date = new Date(ev.event_date).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' });
         const statusColor = ev.is_published ? '#4ade80' : 'var(--gray-3)';
         const statusText = ev.is_published ? 'Pubblicato' : 'Bozza';
-        const eventUrl = window.location.origin + '/evento.html?id=' + ev.id;
+        const isTT = ev.event_type === 'thinktank';
+        const eventUrl = window.location.origin + (isTT ? '/thinktank.html' : '/evento.html') + '?id=' + ev.id;
+        const typeBadge = isTT
+          ? `<span style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:rgba(245,228,69,0.12);color:#f5e445;border:1px solid rgba(245,228,69,0.3);padding:2px 7px;border-radius:2px;margin-right:8px;">ThinkTank</span>`
+          : `<span style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:rgba(255,255,255,0.07);color:var(--gray-2);border:1px solid var(--border);padding:2px 7px;border-radius:2px;margin-right:8px;">Meetup</span>`;
         return `<div style="background:var(--bg-2);border:1px solid var(--border);border-radius:4px;padding:20px 24px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;">
           <div>
-            <div style="font-size:15px;font-weight:900;margin-bottom:6px;">${ev.title}</div>
+            <div style="font-size:15px;font-weight:900;margin-bottom:6px;">${typeBadge}${ev.title}</div>
             <div style="font-size:12px;color:var(--gray-2);">${date} &nbsp;·&nbsp; ${ev.tickets_sold}/${ev.capacity} posti &nbsp;·&nbsp; <span style="color:${statusColor};">${statusText}</span></div>
           </div>
           <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
