@@ -942,15 +942,29 @@
       const { data: events } = await sb.from('events_with_availability').select('*').order('event_date', { ascending: true });
       const grid = document.getElementById('events-grid');
       if (!events || !events.length) return;
+      const now = new Date();
       grid.innerHTML = events.map((ev, i) => {
+        const isOver = new Date(ev.event_date) < now;
+        const isTT = ev.event_type === 'thinktank';
+        const eventUrl = (isTT ? 'thinktank' : 'evento') + '.html?id=' + ev.id;
         const date = new Date(ev.event_date).toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' });
         const price = ev.current_ticket_type === 'early_bird' ? ev.price_early_bird : ev.price_standard;
-        const priceStr = (price / 100).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
-        const spotsLeft = ev.tickets_available;
-        return `<a href="evento.html?id=${ev.id}" class="event-card ${i === 0 ? 'featured' : ''} fade-up">
+        const priceStr = isOver ? 'Concluso' : ev.tickets_available <= 0 ? 'Esaurito' : (price / 100).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
+        let badge, badgeStyle;
+        if (isOver) {
+          badge = 'Concluso';
+          badgeStyle = 'background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.45);';
+        } else if (i === 0) {
+          badge = isTT ? 'ThinkTank' : 'Prossimo';
+          badgeStyle = isTT ? 'background:rgba(245,228,69,0.9);color:#000;' : '';
+        } else {
+          badge = isTT ? 'ThinkTank' : 'In arrivo';
+          badgeStyle = isTT ? 'background:rgba(245,228,69,0.9);color:#000;' : '';
+        }
+        return `<a href="${eventUrl}" class="event-card ${i === 0 ? 'featured' : ''} fade-up">
           <div class="event-img" style="background:${ev.cover_image_url ? 'none' : 'var(--bg-3)'}">
             ${ev.cover_image_url ? `<img src="${ev.cover_image_url}" style="width:100%;height:100%;object-fit:cover;">` : '<span class="event-img-placeholder">NextGen</span>'}
-            <span class="event-badge">${i === 0 ? 'Prossimo' : 'In arrivo'}</span>
+            <span class="event-badge" style="${badgeStyle}">${badge}</span>
           </div>
           <div class="event-body">
             <div class="event-date">${date}</div>
@@ -958,7 +972,7 @@
             <p>${ev.description ? ev.description.slice(0, 100) + '...' : 'Scopri tutti i dettagli e prenota il tuo posto.'}</p>
             <div class="event-meta">
               <span class="event-location">📍 ${ev.location || 'Castelfranco Veneto'}</span>
-              <span class="event-price">${ev.is_sold_out ? 'Esaurito' : priceStr}</span>
+              <span class="event-price">${priceStr}</span>
             </div>
           </div>
         </a>`;
