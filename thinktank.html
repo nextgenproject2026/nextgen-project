@@ -801,10 +801,15 @@ function renderPage(d) {
     priceEl.textContent = d.price_standard ? '€' + (d.price_standard/100).toFixed(0) : '€80';
   }
 
-  // Sold out
+  // Evento concluso o sold out
+  const isOver = d.event_date && new Date(d.event_date) < new Date();
   const isSoldOut = avail <= 0;
   const ctaRow = document.getElementById('cta-row');
-  if (isSoldOut) {
+  if (isOver) {
+    document.getElementById('btn-hero-cta').disabled = true;
+    document.getElementById('btn-table-cta').disabled = true;
+    ctaRow.innerHTML = '<span class="sold-out-badge" style="color:var(--ink-faint);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);">Evento concluso</span>';
+  } else if (isSoldOut) {
     document.getElementById('btn-hero-cta').disabled = true;
     document.getElementById('btn-table-cta').disabled = true;
     ctaRow.innerHTML = '<span class="sold-out-badge">Posti esauriti</span>';

@@ -335,6 +335,13 @@
         document.getElementById('tier-standard').className = 'price-tier dim';
       }
 
+      // Evento concluso (data passata)
+      const isOver = d.event_date && new Date(d.event_date) < new Date();
+      if (isOver) {
+        document.getElementById('booking-btns').innerHTML = '<div class="success-box" style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);color:var(--gray-2);">Evento concluso</div>';
+        return;
+      }
+
       if (type === 'sold_out') {
         document.getElementById('btn-prenota').disabled = true;
         document.getElementById('btn-prenota').style.opacity = '0.35';
