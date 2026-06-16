@@ -791,6 +791,22 @@
       loadAdminEvents();
     }
 
+    async function deleteEvent(id, title) {
+      const { count } = await sb.from('tickets')
+        .select('id', { count: 'exact', head: true })
+        .eq('event_id', id)
+        .eq('status', 'confirmed');
+      if (count > 0) {
+        alert(`Non puoi eliminare "${title}": ci sono ${count} biglietti confermati. Prima annulla o rimborsa tutti i biglietti.`);
+        return;
+      }
+      const ok = confirm(`Eliminare "${title}"?\n\nQuesta azione è irreversibile. Tutti i biglietti pending verranno eliminati.`);
+      if (!ok) return;
+      const { error } = await sb.from('events').delete().eq('id', id);
+      if (error) { alert('Errore: ' + error.message); return; }
+      loadAdminEvents();
+    }
+
     async function loadAdminEvents() {
       const { data } = await sb.from('events').select('*').order('event_date', { ascending: false });
       const container = document.getElementById('admin-events-list');
@@ -815,6 +831,7 @@
             <button class="btn-secondary" style="font-size:11px;padding:6px 12px;" onclick="loadAttendees('${ev.id}', '${ev.title.replace(/'/g, "\\'")}')">Iscritti (${ev.tickets_sold})</button>
             <button class="btn-secondary" style="font-size:11px;padding:6px 12px;" onclick="openEditModal('${ev.id}')">Modifica</button>
             <button class="btn-primary" style="font-size:11px;padding:6px 12px;" onclick="togglePublish('${ev.id}', ${ev.is_published})">${ev.is_published ? 'Nascondi' : 'Pubblica'}</button>
+            <button onclick="deleteEvent('${ev.id}', '${ev.title.replace(/'/g, "\'")}')" style="font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:0.06em;padding:6px 12px;border-radius:4px;cursor:pointer;background:transparent;border:1px solid rgba(239,68,68,0.4);color:#ef4444;transition:background 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.12)'" onmouseout="this.style.background='transparent'">Elimina</button>
           </div>
         </div>`;
       }).join('');
