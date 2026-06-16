@@ -780,9 +780,26 @@ function renderPage(d) {
   document.getElementById('scarcity-cap').textContent = d.capacity;
   document.getElementById('scarcity-left').textContent = avail;
 
-  // Prezzo
-  const price = d.price_standard ? '€' + (d.price_standard / 100).toFixed(0) : '€80';
-  document.getElementById('cta-price').textContent = price;
+  // Prezzo — early bird o standard
+  const now = new Date();
+  const isEarlyBird = d.price_early_bird && d.price_early_bird < d.price_standard &&
+    d.early_bird_deadline && now < new Date(d.early_bird_deadline);
+  const activePrice = isEarlyBird ? d.price_early_bird : d.price_standard;
+  const activeType  = isEarlyBird ? 'early_bird' : 'standard';
+  window._ttTicketType = activeType;
+
+  const priceEl = document.getElementById('cta-price');
+  if (isEarlyBird) {
+    const ebDeadline = new Date(d.early_bird_deadline).toLocaleDateString('it-IT', { day: 'numeric', month: 'long' });
+    priceEl.innerHTML = `€${(activePrice/100).toFixed(0)} <span style="font-size:1rem;font-weight:500;color:var(--accent-yellow);letter-spacing:0;">Early Bird</span>`;
+    // Aggiungi nota scadenza sotto
+    const note = document.createElement('p');
+    note.style.cssText = 'font-size:0.8rem;color:var(--ink-faint);margin-top:0.5rem;';
+    note.textContent = `Prezzo early bird fino al ${ebDeadline} · poi €${(d.price_standard/100).toFixed(0)}`;
+    priceEl.parentElement.appendChild(note);
+  } else {
+    priceEl.textContent = d.price_standard ? '€' + (d.price_standard/100).toFixed(0) : '€80';
+  }
 
   // Sold out
   const isSoldOut = avail <= 0;
@@ -1071,7 +1088,7 @@ async function confirmBooking() {
     const res = await fetch('/api/create-checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ event_id: ev.id, ticket_type: 'standard', user_id: user.id, user_email: user.email })
+      body: JSON.stringify({ event_id: ev.id, ticket_type: window._ttTicketType || 'standard', user_id: user.id, user_email: user.email })
     });
     const { url, error } = await res.json();
     if (error) throw new Error(error);

@@ -438,7 +438,9 @@
               <div class="form-group full"><label>Descrizione</label><textarea id="tt-desc" placeholder="Un tavolo di confronto per..."></textarea></div>
               <div class="form-group"><label>Data e ora</label><input type="datetime-local" id="tt-date"></div>
               <div class="form-group"><label>Location</label><input type="text" id="tt-location" placeholder="Nome posto, Castelfranco Veneto"></div>
-              <div class="form-group"><label>Prezzo (€)</label><input type="number" id="tt-price" placeholder="80" value="80" min="0" step="1"></div>
+              <div class="form-group"><label>Prezzo standard (€)</label><input type="number" id="tt-price" placeholder="80" value="80" min="0" step="1"></div>
+              <div class="form-group"><label>Prezzo early bird (€) <span style="font-weight:400;color:var(--gray-3);">opzionale</span></label><input type="number" id="tt-price-eb" placeholder="lascia vuoto se non vuoi EB" min="0" step="1"></div>
+              <div class="form-group"><label>Giorni early bird</label><input type="number" id="tt-eb-days" placeholder="5" value="5" min="1"></div>
               <div class="form-group"><label>Posti disponibili (max 30)</label><input type="number" id="tt-capacity" placeholder="30" value="30" min="1" max="30"></div>
               <div class="form-group"><label>Apertura prenotazioni</label><input type="datetime-local" id="tt-open-at"></div>
               <div class="form-group"><label>Tema / focus</label><input type="text" id="tt-theme" placeholder="es. Crescita PMI nel territorio veneto"></div>
@@ -761,19 +763,32 @@
       const title = document.getElementById('tt-title').value.trim();
       const date = document.getElementById('tt-date').value;
       if (!title || !date) return showMsg('event-msg', 'Titolo e data obbligatori.', 'error');
-      const price = Math.round(parseFloat(document.getElementById('tt-price').value || 80) * 100);
+      const priceStd = Math.round(parseFloat(document.getElementById('tt-price').value || 80) * 100);
+      const ebRaw = document.getElementById('tt-price-eb').value;
+      const priceEb = ebRaw ? Math.round(parseFloat(ebRaw) * 100) : null;
+      const ebDays = parseInt(document.getElementById('tt-eb-days').value || 5);
+      const openAt = document.getElementById('tt-open-at').value || null;
       const capacity = Math.min(parseInt(document.getElementById('tt-capacity').value || 30), 30);
       const coverUrl = await uploadCoverTTIfNeeded();
+
+      // Calcola scadenza early bird: data apertura + giorni EB
+      let ebDeadline = null;
+      if (priceEb && openAt) {
+        ebDeadline = new Date(new Date(openAt).getTime() + ebDays * 24 * 60 * 60 * 1000).toISOString();
+      }
+
       const { data, error } = await sb.from('events').insert({
         event_type: 'thinktank',
         title,
         description: document.getElementById('tt-desc').value,
         event_date: date,
         location: document.getElementById('tt-location').value,
-        price_standard: price,
-        price_early_bird: price,
-        price_onsite: price,
-        early_bird_start: document.getElementById('tt-open-at').value || null,
+        price_standard: priceStd,
+        price_early_bird: priceEb || priceStd,
+        price_onsite: priceStd,
+        price_early_bird_days: ebDays,
+        early_bird_start: openAt,
+        early_bird_deadline: ebDeadline,
         capacity,
         speaker_name: document.getElementById('tt-theme').value || null,
         program: document.getElementById('tt-agenda').value || null,
