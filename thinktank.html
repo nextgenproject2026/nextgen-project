@@ -726,14 +726,14 @@ async function init() {
 
   // Carica partecipanti confermati per la tavola
   const { data: tickets } = await sb.from('tickets')
-    .select('user_id, profiles(full_name, avatar_url)')
+    .select('user_id, profiles(full_name, avatar_url, role, company)')
     .eq('event_id', id)
     .eq('status', 'confirmed');
   occupiedData = (tickets || []).map((t, i) => ({
     seat: i + 1,
     name: t.profiles?.full_name || 'Partecipante',
     avatar: t.profiles?.avatar_url || null,
-    role: ''
+    role: [t.profiles?.role, t.profiles?.company].filter(Boolean).join(' @ ') || ''
   }));
 
   renderPage(eventData);
