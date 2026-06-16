@@ -86,7 +86,7 @@ module.exports = async (req, res) => {
           price_data: {
             currency: 'eur',
             product_data: {
-              name: `${event.title} — ${ticket_type === 'early_bird' ? 'Early Bird' : 'Standard'}`,
+              name: event.event_type === 'thinktank' ? `${event.title} — Posto al tavolo` : `${event.title} — ${ticket_type === 'early_bird' ? 'Early Bird' : 'Standard'}`,
               description: `${eventDate} · ${event.location}`,
             },
             unit_amount: price,
@@ -101,7 +101,7 @@ module.exports = async (req, res) => {
         ticket_type,
       },
       success_url: `${req.headers.origin}/grazie.html?event=${encodeURIComponent(event.title)}&date=${encodeURIComponent(event.event_date)}&location=${encodeURIComponent(event.location || '')}`,
-      cancel_url: `${req.headers.origin}/index.html?cancelled=true`,
+      cancel_url: `${req.headers.origin}/${event.event_type === 'thinktank' ? 'thinktank' : 'evento'}.html?id=${event_id}&cancelled=true`,
     });
 
     // Salva session id sul ticket
