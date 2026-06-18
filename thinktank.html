@@ -205,6 +205,7 @@
   .phase-card p { font-size: 0.92rem; line-height: 1.6; color: rgba(0,0,0,0.6); }
 
   /* ACCESS */
+  .access { background: #111; }
   .access__inner { max-width: 800px; }
   .access__targets { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 2.5rem 0; list-style: none; }
   .target-tag { font-size: 0.8rem; font-weight: 500; padding: 0.6rem 1.1rem; border-radius: var(--radius-btn); border: 1px solid var(--border-strong); color: var(--white); }
@@ -214,6 +215,17 @@
   .scarcity-box__copy strong { display: block; font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--black); }
   .scarcity-box__copy p { color: rgba(0,0,0,0.6); font-size: 0.92rem; line-height: 1.55; }
   .seats-remaining { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(0,0,0,0.5); margin-top: 0.75rem; display: block; }
+
+  /* PHOTO GRID */
+  .photo-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: auto auto; gap: 6px; margin-top: 2.5rem; border-radius: var(--radius-md); overflow: hidden; }
+  .photo-grid__item { overflow: hidden; aspect-ratio: 3/4; }
+  .photo-grid__item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.4s ease; filter: grayscale(20%); }
+  .photo-grid__item:hover img { transform: scale(1.04); filter: grayscale(0%); }
+  .photo-grid__item--wide { grid-column: span 2; aspect-ratio: 3/2; }
+  @media (max-width: 700px) {
+    .photo-grid { grid-template-columns: repeat(2, 1fr); }
+    .photo-grid__item--wide { grid-column: span 2; }
+  }
 
   /* AGENDA */
   .agenda-list { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0; }
@@ -564,12 +576,30 @@
         <li class="target-tag">Freelancer e Liberi Professionisti</li>
         <li class="target-tag">Consulenti d'Impresa</li>
       </ul>
-      <div class="scarcity-box">
-        <div class="scarcity-box__num" id="scarcity-num">30</div>
-        <div class="scarcity-box__copy">
-          <strong>Regola ferrea di scarsità</strong>
-          <p>Il tavolo si chiude a <span id="scarcity-cap">30</span> partecipanti. Nessuna eccezione, nessuna lista d'attesa pubblica.</p>
-          <span class="seats-remaining">— <span id="scarcity-left">—</span> sedie ancora disponibili —</span>
+      <div class="photo-grid">
+        <div class="photo-grid__item photo-grid__item--wide">
+          <img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/events/photo1.png" alt="NextGen evento">
+        </div>
+        <div class="photo-grid__item">
+          <img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/events/photo2.png" alt="NextGen evento">
+        </div>
+        <div class="photo-grid__item">
+          <img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/events/photo3.png" alt="NextGen evento">
+        </div>
+        <div class="photo-grid__item">
+          <img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/events/photo4.png" alt="NextGen evento">
+        </div>
+        <div class="photo-grid__item">
+          <img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/events/photo5.png" alt="NextGen evento">
+        </div>
+        <div class="photo-grid__item">
+          <img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/events/photo6.png" alt="NextGen evento">
+        </div>
+        <div class="photo-grid__item">
+          <img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/events/photo7.png" alt="NextGen evento">
+        </div>
+        <div class="photo-grid__item photo-grid__item--wide">
+          <img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/events/photo8.png" alt="NextGen evento">
         </div>
       </div>
     </div>
