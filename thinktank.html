@@ -827,9 +827,7 @@ function renderPage(d) {
   document.getElementById('table-capacity-text').textContent = d.capacity + ' posti.';
   document.getElementById('centerCapacity').textContent = d.capacity;
   document.getElementById('centerSeatsLeft').textContent = avail;
-  document.getElementById('scarcity-num').textContent = totalPublicSeats;
-  document.getElementById('scarcity-cap').textContent = totalPublicSeats;
-  document.getElementById('scarcity-left').textContent = avail;
+  // scarcity-box rimossa, sostituita da photo grid
 
   // Prezzo — early bird o standard
   const now = new Date();
