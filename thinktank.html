@@ -216,16 +216,18 @@
   .scarcity-box__copy p { color: rgba(0,0,0,0.6); font-size: 0.92rem; line-height: 1.55; }
   .seats-remaining { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(0,0,0,0.5); margin-top: 0.75rem; display: block; }
 
-  /* PHOTO GRID */
-  .photo-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: auto auto; gap: 6px; margin-top: 2.5rem; border-radius: var(--radius-md); overflow: hidden; }
-  .photo-grid__item { overflow: hidden; aspect-ratio: 3/4; }
-  .photo-grid__item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.4s ease; filter: grayscale(20%); }
-  .photo-grid__item:hover img { transform: scale(1.04); filter: grayscale(0%); }
-  .photo-grid__item--wide { grid-column: span 2; aspect-ratio: 3/2; }
-  @media (max-width: 700px) {
-    .photo-grid { grid-template-columns: repeat(2, 1fr); }
-    .photo-grid__item--wide { grid-column: span 2; }
-  }
+  /* PHOTO SLIDER */
+  .photo-slider { position: relative; margin-top: 2.5rem; overflow: hidden; border-radius: var(--radius-md); }
+  .photo-slider__track { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; cursor: grab; user-select: none; }
+  .photo-slider__track::-webkit-scrollbar { display: none; }
+  .photo-slider__track.is-dragging { cursor: grabbing; }
+  .photo-slider__item { flex: 0 0 auto; scroll-snap-align: start; border-radius: var(--radius-sm); overflow: hidden; height: 420px; }
+  .photo-slider__item img { height: 100%; width: auto; display: block; object-fit: contain; filter: grayscale(15%); transition: filter 0.3s; pointer-events: none; }
+  .photo-slider__item:hover img { filter: grayscale(0%); }
+  .photo-slider__nav { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+  .photo-slider__btn { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border-strong); background: transparent; color: var(--white); font-size: 1rem; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; }
+  .photo-slider__btn:hover { background: rgba(255,255,255,0.1); }
+  @media (max-width: 600px) { .photo-slider__item { height: 260px; } }
 
   /* AGENDA */
   .agenda-list { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0; }
@@ -576,30 +578,20 @@
         <li class="target-tag">Freelancer e Liberi Professionisti</li>
         <li class="target-tag">Consulenti d'Impresa</li>
       </ul>
-      <div class="photo-grid">
-        <div class="photo-grid__item photo-grid__item--wide">
-          <img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/2.png" alt="NextGen evento">
+      <div class="photo-slider" id="photoSlider">
+        <div class="photo-slider__track" id="sliderTrack">
+          <div class="photo-slider__item"><img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/2.png" alt="NextGen evento"></div>
+          <div class="photo-slider__item"><img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/3.png" alt="NextGen evento"></div>
+          <div class="photo-slider__item"><img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/4.png" alt="NextGen evento"></div>
+          <div class="photo-slider__item"><img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/5.png" alt="NextGen evento"></div>
+          <div class="photo-slider__item"><img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/6.png" alt="NextGen evento"></div>
+          <div class="photo-slider__item"><img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/7.png" alt="NextGen evento"></div>
+          <div class="photo-slider__item"><img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/8.png" alt="NextGen evento"></div>
+          <div class="photo-slider__item"><img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/9.png" alt="NextGen evento"></div>
         </div>
-        <div class="photo-grid__item">
-          <img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/3.png" alt="NextGen evento">
-        </div>
-        <div class="photo-grid__item">
-          <img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/4.png" alt="NextGen evento">
-        </div>
-        <div class="photo-grid__item">
-          <img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/5.png" alt="NextGen evento">
-        </div>
-        <div class="photo-grid__item">
-          <img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/6.png" alt="NextGen evento">
-        </div>
-        <div class="photo-grid__item">
-          <img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/7.png" alt="NextGen evento">
-        </div>
-        <div class="photo-grid__item">
-          <img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/8.png" alt="NextGen evento">
-        </div>
-        <div class="photo-grid__item photo-grid__item--wide">
-          <img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/9.png" alt="NextGen evento">
+        <div class="photo-slider__nav">
+          <button class="photo-slider__btn" id="sliderPrev" aria-label="Precedente">&#8592;</button>
+          <button class="photo-slider__btn" id="sliderNext" aria-label="Successiva">&#8594;</button>
         </div>
       </div>
     </div>
@@ -883,6 +875,7 @@ function renderPage(d) {
   renderChairs(d.capacity);
   initTicker();
   initCrowdsource();
+  initSlider();
 
   // Deep link ?seat=N
   const seatParam = new URLSearchParams(window.location.search).get('seat');
@@ -1241,6 +1234,26 @@ async function doLogout() {
   await sb.auth.signOut();
   user = null;
   showStep('choose');
+}
+
+/* ════════ SLIDER ════════ */
+function initSlider() {
+  const track = document.getElementById('sliderTrack');
+  const prev  = document.getElementById('sliderPrev');
+  const next  = document.getElementById('sliderNext');
+  if (!track) return;
+
+  // Frecce
+  const scrollAmt = () => track.clientWidth * 0.7;
+  prev.addEventListener('click', () => track.scrollBy({ left: -scrollAmt(), behavior: 'smooth' }));
+  next.addEventListener('click', () => track.scrollBy({ left:  scrollAmt(), behavior: 'smooth' }));
+
+  // Drag to scroll
+  let isDown = false, startX = 0, scrollLeft = 0;
+  track.addEventListener('mousedown', e => { isDown = true; track.classList.add('is-dragging'); startX = e.pageX - track.offsetLeft; scrollLeft = track.scrollLeft; });
+  track.addEventListener('mouseleave', () => { isDown = false; track.classList.remove('is-dragging'); });
+  track.addEventListener('mouseup',    () => { isDown = false; track.classList.remove('is-dragging'); });
+  track.addEventListener('mousemove',  e => { if (!isDown) return; e.preventDefault(); const x = e.pageX - track.offsetLeft; track.scrollLeft = scrollLeft - (x - startX) * 1.5; });
 }
 
 /* ════════ TOAST ════════ */
