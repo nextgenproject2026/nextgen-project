@@ -665,7 +665,11 @@
       <div class="form-group"><label>Nome e cognome</label><input type="text" id="r-name" placeholder="Marco Rossi" autocomplete="name"></div>
       <div class="form-group"><label>Email</label><input type="email" id="r-email" placeholder="marco@azienda.it" autocomplete="email"></div>
       <div class="form-group"><label>Password</label><input type="password" id="r-pw" placeholder="Minimo 8 caratteri" autocomplete="new-password" oninput="checkRegisterBtn()"></div>
-      <div class="privacy-row">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="form-group" style="margin-bottom:0"><label>Ruolo / Professione</label><input type="text" id="r-role" placeholder="CEO, Founder, Avvocato…"></div>
+        <div class="form-group" style="margin-bottom:0"><label>Azienda</label><input type="text" id="r-company" placeholder="Nome azienda"></div>
+      </div>
+      <div class="privacy-row" style="margin-top:1rem;">
         <input type="checkbox" id="tt-privacy">
         <label for="tt-privacy">Ho letto e accetto la <a href="/privacy.html" target="_blank">Privacy Policy</a> di NextGen Project.</label>
       </div>
@@ -1077,14 +1081,17 @@ async function doLogin() {
 }
 
 async function doRegister() {
-  const name  = document.getElementById('r-name').value.trim();
-  const email = document.getElementById('r-email').value.trim();
-  const pw    = document.getElementById('r-pw').value;
-  if (!name || !email || !pw) return showModalMsg('msg-register', 'Compila tutti i campi.', 'error');
+  const name    = document.getElementById('r-name').value.trim();
+  const email   = document.getElementById('r-email').value.trim();
+  const pw      = document.getElementById('r-pw').value;
+  const role    = document.getElementById('r-role').value.trim();
+  const company = document.getElementById('r-company').value.trim();
+  if (!name || !email || !pw) return showModalMsg('msg-register', 'Compila tutti i campi obbligatori.', 'error');
   if (pw.length < 8) return showModalMsg('msg-register', 'Password minimo 8 caratteri.', 'error');
   if (!document.getElementById('tt-privacy').checked) return showModalMsg('msg-register', 'Devi accettare la Privacy Policy per continuare.', 'error');
   const btn = document.getElementById('btn-register');
   btn.disabled = true; btn.textContent = 'Registrazione in corso...';
+
   const { data: su, error: se } = await sb.auth.signUp({ email, password: pw, options: { data: { full_name: name } } });
   if (se) {
     const { data: si, error: sie } = await sb.auth.signInWithPassword({ email, password: pw });
@@ -1098,6 +1105,14 @@ async function doRegister() {
       await fetch('/api/notify-admin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'community_event', user_name: name, user_email: email, event_title: ev?.title, registered_at: new Date().toISOString() }) });
     } catch(e) {}
   }
+
+  // Salva ruolo e azienda nel profilo (upsert per nuovi e già esistenti)
+  if (role || company) {
+    try {
+      await sb.from('profiles').upsert({ id: user.id, full_name: name, role, company }, { onConflict: 'id' });
+    } catch(e) {}
+  }
+
   btn.disabled = false; btn.textContent = 'Registrati e prenota';
   document.getElementById('m-user-email').textContent = user.email;
   showStep('loggedin');
