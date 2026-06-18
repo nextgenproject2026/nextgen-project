@@ -219,10 +219,10 @@
   /* PHOTO SLIDER — infinite auto-scroll */
   .photo-slider { position: relative; margin-top: 2.5rem; overflow: hidden; width: 100vw; margin-left: calc(-50vw + 50%); background: #111; }
   .photo-slider__track { display: flex; gap: 4px; width: max-content; will-change: transform; }
-  .photo-slider__item { flex: 0 0 33.333vw; overflow: hidden; height: 480px; }
+  .photo-slider__item { flex: none; overflow: hidden; height: 480px; }
   .photo-slider__item img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: center center; filter: grayscale(15%); transition: filter 0.3s; pointer-events: none; }
   .photo-slider__item:hover img { filter: grayscale(0%); }
-  @media (max-width: 600px) { .photo-slider__item { flex: 0 0 80vw; height: 300px; } }
+  @media (max-width: 600px) { .photo-slider__item { height: 300px; } }
 
   /* AGENDA */
   .agenda-list { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0; }
@@ -1228,45 +1228,35 @@ function initSlider() {
   const track = document.getElementById('sliderTrack');
   if (!track) return;
 
-  // Triplica le foto: [clone | originale | clone]
-  // così partiamo dal mezzo e il loop è sempre coperto
-  const items = Array.from(track.children);
-  // Prepend clone (prima del set originale)
-  items.slice().reverse().forEach(item => {
-    track.insertBefore(item.cloneNode(true), track.firstChild);
-  });
-  // Append clone (dopo il set originale)
-  items.forEach(item => track.appendChild(item.cloneNode(true)));
+  const N = 8; // numero foto originali
+  const PHOTO_W = Math.ceil(window.innerWidth / 3); // 3 foto per schermo, sempre
+  const GAP = 4;
 
-  // Aspetta che le immagini carichino per calcolare la larghezza corretta
-  let singleSetWidth = 0;
-  function calcWidth() {
-    // La larghezza di UN set di foto (1/3 del totale)
-    singleSetWidth = track.scrollWidth / 3;
-    // Parti dal secondo set (centro) per avere foto sia a sx che a dx
-    offset = singleSetWidth;
-    track.style.transform = `translateX(-${offset}px)`;
+  // Imposta larghezza fissa su ogni item
+  function setSizes() {
+    const pw = Math.ceil(window.innerWidth / 3);
+    track.querySelectorAll('.photo-slider__item').forEach(el => {
+      el.style.width = pw + 'px';
+      el.style.minWidth = pw + 'px';
+    });
   }
 
-  const speed = 0.5;
+  // Duplica per loop: originale + clone
+  const items = Array.from(track.children);
+  items.forEach(item => track.appendChild(item.cloneNode(true)));
+
+  setSizes();
+  window.addEventListener('resize', setSizes);
+
+  const singleSetWidth = () => (Math.ceil(window.innerWidth / 3) + GAP) * N;
+
   let offset = 0;
   let paused = false;
 
-  // Calcola dopo che le immagini sono caricate
-  const imgs = track.querySelectorAll('img');
-  let loaded = 0;
-  imgs.forEach(img => {
-    if (img.complete) { loaded++; if (loaded === imgs.length) calcWidth(); }
-    else img.addEventListener('load', () => { loaded++; if (loaded === imgs.length) calcWidth(); });
-  });
-  // Fallback se già tutto caricato
-  setTimeout(calcWidth, 100);
-
   function step() {
-    if (!paused && singleSetWidth > 0) {
-      offset += speed;
-      // Reset al secondo set quando si supera la fine del secondo
-      if (offset >= singleSetWidth * 2) offset = singleSetWidth;
+    if (!paused) {
+      offset += 0.5;
+      if (offset >= singleSetWidth()) offset = 0;
       track.style.transform = `translateX(-${offset}px)`;
     }
     requestAnimationFrame(step);
