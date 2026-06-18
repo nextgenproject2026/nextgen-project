@@ -216,18 +216,13 @@
   .scarcity-box__copy p { color: rgba(0,0,0,0.6); font-size: 0.92rem; line-height: 1.55; }
   .seats-remaining { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(0,0,0,0.5); margin-top: 0.75rem; display: block; }
 
-  /* PHOTO SLIDER */
-  .photo-slider { position: relative; margin-top: 2.5rem; overflow: hidden; border-radius: var(--radius-md); }
-  .photo-slider__track { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; cursor: grab; user-select: none; }
-  .photo-slider__track::-webkit-scrollbar { display: none; }
-  .photo-slider__track.is-dragging { cursor: grabbing; }
-  .photo-slider__item { flex: 0 0 auto; scroll-snap-align: start; border-radius: var(--radius-sm); overflow: hidden; height: 420px; }
-  .photo-slider__item img { height: 100%; width: auto; display: block; object-fit: contain; filter: grayscale(15%); transition: filter 0.3s; pointer-events: none; }
+  /* PHOTO SLIDER — infinite auto-scroll */
+  .photo-slider { position: relative; margin-top: 2.5rem; overflow: hidden; width: 100vw; margin-left: calc(-50vw + 50%); }
+  .photo-slider__track { display: flex; gap: 10px; width: max-content; will-change: transform; }
+  .photo-slider__item { flex: 0 0 auto; overflow: hidden; border-radius: var(--radius-sm); height: 400px; }
+  .photo-slider__item img { height: 100%; width: auto; display: block; object-fit: cover; filter: grayscale(15%); transition: filter 0.3s; pointer-events: none; }
   .photo-slider__item:hover img { filter: grayscale(0%); }
-  .photo-slider__nav { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
-  .photo-slider__btn { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border-strong); background: transparent; color: var(--white); font-size: 1rem; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; }
-  .photo-slider__btn:hover { background: rgba(255,255,255,0.1); }
-  @media (max-width: 600px) { .photo-slider__item { height: 260px; } }
+  @media (max-width: 600px) { .photo-slider__item { height: 240px; } }
 
   /* AGENDA */
   .agenda-list { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0; }
@@ -588,10 +583,6 @@
           <div class="photo-slider__item"><img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/7.png" alt="NextGen evento"></div>
           <div class="photo-slider__item"><img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/8.png" alt="NextGen evento"></div>
           <div class="photo-slider__item"><img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/9.png" alt="NextGen evento"></div>
-        </div>
-        <div class="photo-slider__nav">
-          <button class="photo-slider__btn" id="sliderPrev" aria-label="Precedente">&#8592;</button>
-          <button class="photo-slider__btn" id="sliderNext" aria-label="Successiva">&#8594;</button>
         </div>
       </div>
     </div>
@@ -1239,21 +1230,31 @@ async function doLogout() {
 /* ════════ SLIDER ════════ */
 function initSlider() {
   const track = document.getElementById('sliderTrack');
-  const prev  = document.getElementById('sliderPrev');
-  const next  = document.getElementById('sliderNext');
   if (!track) return;
 
-  // Frecce
-  const scrollAmt = () => track.clientWidth * 0.7;
-  prev.addEventListener('click', () => track.scrollBy({ left: -scrollAmt(), behavior: 'smooth' }));
-  next.addEventListener('click', () => track.scrollBy({ left:  scrollAmt(), behavior: 'smooth' }));
+  // Duplica le foto per loop infinito
+  const items = Array.from(track.children);
+  items.forEach(item => track.appendChild(item.cloneNode(true)));
 
-  // Drag to scroll
-  let isDown = false, startX = 0, scrollLeft = 0;
-  track.addEventListener('mousedown', e => { isDown = true; track.classList.add('is-dragging'); startX = e.pageX - track.offsetLeft; scrollLeft = track.scrollLeft; });
-  track.addEventListener('mouseleave', () => { isDown = false; track.classList.remove('is-dragging'); });
-  track.addEventListener('mouseup',    () => { isDown = false; track.classList.remove('is-dragging'); });
-  track.addEventListener('mousemove',  e => { if (!isDown) return; e.preventDefault(); const x = e.pageX - track.offsetLeft; track.scrollLeft = scrollLeft - (x - startX) * 1.5; });
+  const speed = 0.6; // px per frame
+  let offset = 0;
+  let paused = false;
+  const halfWidth = () => track.scrollWidth / 2;
+
+  function step() {
+    if (!paused) {
+      offset += speed;
+      if (offset >= halfWidth()) offset = 0;
+      track.style.transform = `translateX(-${offset}px)`;
+    }
+    requestAnimationFrame(step);
+  }
+
+  // Pausa on hover
+  track.addEventListener('mouseenter', () => paused = true);
+  track.addEventListener('mouseleave', () => paused = false);
+
+  requestAnimationFrame(step);
 }
 
 /* ════════ TOAST ════════ */
