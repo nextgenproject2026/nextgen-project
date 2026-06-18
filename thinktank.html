@@ -994,6 +994,18 @@ function initCrowdsource() {
     return;
   }
 
+  // Solo utenti loggati possono inserire temi
+  if (!user) {
+    themeInput.disabled = true;
+    themeInput.placeholder = 'Accedi per proporre un tema.';
+    themeSubmit.disabled = true;
+    const hint = document.querySelector('.crowdsource__hint');
+    if (hint) {
+      hint.innerHTML = '<a onclick="openBookingModal()" style="color:var(--white);text-decoration:underline;text-underline-offset:4px;cursor:pointer;">Accedi o registrati</a> per proporre un tema al tavolo.';
+    }
+    return;
+  }
+
   // Carica i temi già inseriti nel ticker
   async function loadThemes() {
     const { data } = await sb.from('thinktank_themes')
@@ -1034,10 +1046,19 @@ function initCrowdsource() {
     const text = themeInput.value.trim();
     if (countWords(text) < 1 || countWords(text) > 5 || myCount >= 5) return;
 
-    // Salva su Supabase
+    // Recupera nome dal profilo
+    let userName = user.email;
+    try {
+      const { data: profile } = await sb.from('profiles').select('full_name').eq('id', user.id).single();
+      if (profile?.full_name) userName = profile.full_name;
+    } catch(e) {}
+
+    // Salva su Supabase con dati utente
     const { error } = await sb.from('thinktank_themes').insert({
       event_id: ev.id,
-      user_id: user?.id || null,
+      user_id: user.id,
+      user_name: userName,
+      user_email: user.email,
       theme: text
     });
 
