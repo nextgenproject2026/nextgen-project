@@ -218,11 +218,11 @@
 
   /* PHOTO SLIDER — infinite auto-scroll */
   .photo-slider { position: relative; margin-top: 2.5rem; overflow: hidden; width: 100vw; margin-left: calc(-50vw + 50%); }
-  .photo-slider__track { display: flex; gap: 10px; width: max-content; will-change: transform; }
-  .photo-slider__item { flex: 0 0 360px; overflow: hidden; border-radius: var(--radius-sm); height: 480px; }
-  .photo-slider__item img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: center top; filter: grayscale(15%); transition: filter 0.3s; pointer-events: none; }
+  .photo-slider__track { display: flex; gap: 0; width: max-content; will-change: transform; }
+  .photo-slider__item { flex: 0 0 auto; overflow: hidden; height: 480px; }
+  .photo-slider__item img { height: 100%; width: auto; display: block; object-fit: cover; filter: grayscale(15%); transition: filter 0.3s; pointer-events: none; }
   .photo-slider__item:hover img { filter: grayscale(0%); }
-  @media (max-width: 600px) { .photo-slider__item { flex: 0 0 260px; height: 340px; } }
+  @media (max-width: 600px) { .photo-slider__item { height: 300px; } }
 
   /* AGENDA */
   .agenda-list { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0; }
@@ -1232,25 +1232,50 @@ function initSlider() {
   const track = document.getElementById('sliderTrack');
   if (!track) return;
 
-  // Duplica le foto per loop infinito
+  // Triplica le foto: [clone | originale | clone]
+  // così partiamo dal mezzo e il loop è sempre coperto
   const items = Array.from(track.children);
+  // Prepend clone (prima del set originale)
+  items.slice().reverse().forEach(item => {
+    track.insertBefore(item.cloneNode(true), track.firstChild);
+  });
+  // Append clone (dopo il set originale)
   items.forEach(item => track.appendChild(item.cloneNode(true)));
 
-  const speed = 0.6; // px per frame
+  // Aspetta che le immagini carichino per calcolare la larghezza corretta
+  let singleSetWidth = 0;
+  function calcWidth() {
+    // La larghezza di UN set di foto (1/3 del totale)
+    singleSetWidth = track.scrollWidth / 3;
+    // Parti dal secondo set (centro) per avere foto sia a sx che a dx
+    offset = singleSetWidth;
+    track.style.transform = `translateX(-${offset}px)`;
+  }
+
+  const speed = 0.5;
   let offset = 0;
   let paused = false;
-  const halfWidth = () => track.scrollWidth / 2;
+
+  // Calcola dopo che le immagini sono caricate
+  const imgs = track.querySelectorAll('img');
+  let loaded = 0;
+  imgs.forEach(img => {
+    if (img.complete) { loaded++; if (loaded === imgs.length) calcWidth(); }
+    else img.addEventListener('load', () => { loaded++; if (loaded === imgs.length) calcWidth(); });
+  });
+  // Fallback se già tutto caricato
+  setTimeout(calcWidth, 100);
 
   function step() {
-    if (!paused) {
+    if (!paused && singleSetWidth > 0) {
       offset += speed;
-      if (offset >= halfWidth()) offset = 0;
+      // Reset al secondo set quando si supera la fine del secondo
+      if (offset >= singleSetWidth * 2) offset = singleSetWidth;
       track.style.transform = `translateX(-${offset}px)`;
     }
     requestAnimationFrame(step);
   }
 
-  // Pausa on hover
   track.addEventListener('mouseenter', () => paused = true);
   track.addEventListener('mouseleave', () => paused = false);
 
