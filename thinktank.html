@@ -686,6 +686,15 @@ const sb = createClient(SB_URL, SB_KEY);
 
 let ev = null, user = null, occupiedData = [];
 
+// Founder sempre presenti nei posti 1-5
+const FOUNDERS = [
+  { seat: 1, id: '686d77d5-9253-4cf7-ac7b-197d07f8e7ed', name: 'Lorenzo Bello',    role: 'Amministratore Delegato @ Azazel Srls',              avatar: 'https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/profiles/avatars/686d77d5-9253-4cf7-ac7b-197d07f8e7ed.jpg' },
+  { seat: 2, id: 'b2a2d3d0-0dc5-4e37-ab18-f9766006ce08', name: 'David Doro',       role: 'Designer & Co-Founder @ BiGi',                       avatar: 'https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/profiles/avatars/b2a2d3d0-0dc5-4e37-ab18-f9766006ce08.jpg' },
+  { seat: 3, id: '3beb61c2-dd70-4db9-a5e5-abbd68ede516', name: 'Luca Dallan',      role: 'Dallan Srl',                                         avatar: 'https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/profiles/avatars/3beb61c2-dd70-4db9-a5e5-abbd68ede516.jpg' },
+  { seat: 4, id: '2c569703-f63a-45cb-9132-c15235b09c4c', name: 'Alex Pasinato',    role: 'Titolare @ BHS Srl',                                 avatar: 'https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/profiles/avatars/2c569703-f63a-45cb-9132-c15235b09c4c.JPG' },
+  { seat: 5, id: '173f2a2c-3892-49cd-8f44-aa1824da2035', name: 'Simone Proverbio', role: 'Co-Founder @ Agenzia Immobiliare Basso Feltrino',     avatar: 'https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/profiles/avatars/173f2a2c-3892-49cd-8f44-aa1824da2035.jpeg' },
+];
+
 /* ════════ INIT ════════ */
 async function init() {
   const { data: { session } } = await sb.auth.getSession();
@@ -728,13 +737,19 @@ async function init() {
   const { data: tickets } = await sb.from('tickets')
     .select('user_id, profiles(full_name, avatar_url, role, company)')
     .eq('event_id', id)
-    .eq('status', 'confirmed');
-  occupiedData = (tickets || []).map((t, i) => ({
-    seat: i + 1,
+    .eq('status', 'confirmed')
+    .not('user_id', 'in', `(${FOUNDERS.map(f => f.id).join(',')})`);
+
+  // Posti pubblici: partono dal 6 in poi
+  const publicOccupied = (tickets || []).map((t, i) => ({
+    seat: FOUNDERS.length + 1 + i,
     name: t.profiles?.full_name || 'Partecipante',
     avatar: t.profiles?.avatar_url || null,
     role: [t.profiles?.role, t.profiles?.company].filter(Boolean).join(' @ ') || ''
   }));
+
+  // Merge founder + pubblico
+  occupiedData = [...FOUNDERS, ...publicOccupied];
 
   renderPage(eventData);
 }
@@ -763,8 +778,10 @@ function renderPage(d) {
   const dateStr = new Date(d.event_date).toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' });
   document.getElementById('hero-date').textContent = dateStr;
   document.getElementById('hero-location').textContent = d.location || '';
-  const avail = d.tickets_available ?? (d.capacity - d.tickets_sold);
-  document.getElementById('hero-seats').textContent = avail + ' posti disponibili su ' + d.capacity;
+  const totalPublicSeats = d.capacity - FOUNDERS.length;
+  const publicSold = Math.max(0, d.tickets_sold - FOUNDERS.length);
+  const avail = Math.max(0, totalPublicSeats - publicSold);
+  document.getElementById('hero-seats').textContent = avail + ' posti disponibili su ' + totalPublicSeats;
 
   // Cover
   if (d.cover_image_url) {
@@ -776,8 +793,8 @@ function renderPage(d) {
   document.getElementById('table-capacity-text').textContent = d.capacity + ' posti.';
   document.getElementById('centerCapacity').textContent = d.capacity;
   document.getElementById('centerSeatsLeft').textContent = avail;
-  document.getElementById('scarcity-num').textContent = d.capacity;
-  document.getElementById('scarcity-cap').textContent = d.capacity;
+  document.getElementById('scarcity-num').textContent = totalPublicSeats;
+  document.getElementById('scarcity-cap').textContent = totalPublicSeats;
   document.getElementById('scarcity-left').textContent = avail;
 
   // Prezzo — early bird o standard
@@ -801,7 +818,7 @@ function renderPage(d) {
     priceEl.textContent = d.price_standard ? '€' + (d.price_standard/100).toFixed(0) : '€80';
   }
 
-  // Evento concluso o sold out
+  // Evento concluso o sold out (solo posti pubblici)
   const isOver = d.event_date && new Date(d.event_date) < new Date();
   const isSoldOut = avail <= 0;
   const ctaRow = document.getElementById('cta-row');
