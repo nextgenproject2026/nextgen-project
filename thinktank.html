@@ -797,7 +797,7 @@ function renderPage(d) {
   const totalPublicSeats = d.capacity - FOUNDERS.length;
   const publicSold = Math.max(0, d.tickets_sold - FOUNDERS.length);
   const avail = Math.max(0, totalPublicSeats - publicSold);
-  document.getElementById('hero-seats').textContent = avail + ' posti disponibili su ' + totalPublicSeats;
+  document.getElementById('hero-seats').textContent = totalPublicSeats + ' posti disponibili';
 
   // Cover image rimossa su richiesta
 
