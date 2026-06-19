@@ -233,6 +233,19 @@
     .photo-slider__item { aspect-ratio: 4/3; }
   }
 
+  /* LOCATION MAP */
+  .location-section { padding: 5rem 0; }
+  .location-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; align-items: start; }
+  .location-info h3 { font-size: 1.5rem; margin-bottom: 1rem; color: var(--white); }
+  .location-info p { margin-bottom: 1.5rem; }
+  .location-address { display: flex; align-items: flex-start; gap: 0.6rem; font-size: 0.95rem; color: var(--ink-muted); margin-bottom: 1.5rem; line-height: 1.5; }
+  .location-map { width: 100%; height: 360px; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border); }
+  .location-map iframe { width: 100%; height: 100%; border: 0; filter: grayscale(40%) invert(92%) contrast(85%); }
+  @media (max-width: 800px) {
+    .location-grid { grid-template-columns: 1fr; }
+    .location-map { height: 280px; }
+  }
+
   /* AGENDA */
   .agenda-list { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0; }
   .agenda-item { display: flex; gap: 1.5rem; padding: 1.1rem 0; border-bottom: 1px solid var(--border); align-items: baseline; }
@@ -553,6 +566,32 @@
       <h2>Programma</h2>
     </div>
     <div class="agenda-list" id="agenda-list"></div>
+  </div>
+</section>
+
+<!-- LOCATION -->
+<section class="location-section">
+  <div class="container">
+    <div class="section-head">
+      <p class="eyebrow">Dove</p>
+      <h2><span class="line">La sede</span><span class="line watermark">del tavolo</span></h2>
+    </div>
+    <div class="location-grid">
+      <div class="location-info">
+        <h3>Durante Ufficio Srl</h3>
+        <div class="location-address">📍 Via Marosticana, 39/B - Int. 1, 31010 Maser TV</div>
+        <p>Lo spazio che ospita il ThinkTank, gentilmente messo a disposizione da Durante Ufficio.</p>
+        <a href="https://www.duranteufficio.com/ita/" target="_blank" class="btn btn--ghost">Visita il sito →</a>
+      </div>
+      <div class="location-map">
+        <iframe
+          src="https://www.google.com/maps?q=Via+Marosticana+39B+Int+1+31010+Maser+TV&output=embed"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen>
+        </iframe>
+      </div>
+    </div>
   </div>
 </section>
 
