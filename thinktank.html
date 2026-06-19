@@ -409,9 +409,7 @@
 </section>
 
 <!-- COVER (se presente) -->
-<div class="container" id="cover-wrap" style="display:none;">
-  <div class="event-cover"><img id="event-cover-img" src="" alt=""></div>
-</div>
+<!-- cover image rimossa su richiesta -->
 
 <!-- TAVOLA ROTONDA -->
 <section class="table-section" id="tavola">
@@ -801,11 +799,7 @@ function renderPage(d) {
   const avail = Math.max(0, totalPublicSeats - publicSold);
   document.getElementById('hero-seats').textContent = avail + ' posti disponibili su ' + totalPublicSeats;
 
-  // Cover
-  if (d.cover_image_url) {
-    document.getElementById('cover-wrap').style.display = 'block';
-    document.getElementById('event-cover-img').src = d.cover_image_url;
-  }
+  // Cover image rimossa su richiesta
 
   // Tavola
   document.getElementById('table-capacity-text').textContent = d.capacity + ' posti.';
