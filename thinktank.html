@@ -207,8 +207,11 @@
   /* ACCESS */
   .access { background: #111; }
   .access__inner { max-width: 800px; }
-  .access__targets { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 2.5rem 0; list-style: none; }
-  .target-tag { font-size: 0.8rem; font-weight: 500; padding: 0.6rem 1.1rem; border-radius: var(--radius-btn); border: 1px solid var(--border-strong); color: var(--white); }
+  .access__targets { display: flex; flex-wrap: nowrap; gap: 0.5rem; margin: 2.5rem 0; list-style: none; max-width: none; width: max-content; }
+  .target-tag { font-size: 0.8rem; font-weight: 500; padding: 0.6rem 1.1rem; border-radius: var(--radius-btn); border: 1px solid var(--border-strong); color: var(--white); white-space: nowrap; flex: 0 0 auto; }
+  @media (max-width: 900px) {
+    .access__targets { flex-wrap: wrap; width: auto; overflow-x: auto; }
+  }
   .scarcity-box { background: var(--white); color: var(--black); border-radius: var(--radius-md); padding: 2.25rem 2.5rem; display: flex; align-items: center; gap: 2.5rem; flex-wrap: wrap; margin-top: 2rem; }
   .scarcity-box__num { font-size: 6rem; font-weight: 900; line-height: 1; color: var(--black); letter-spacing: -0.05em; }
   .scarcity-box__copy { flex: 1; min-width: 200px; }
