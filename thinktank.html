@@ -955,8 +955,11 @@ function renderChairs(capacity) {
       // Hover per desktop (mouse reale, non simulato da touch)
       node.addEventListener('mouseenter', () => { if (matchMedia('(hover: hover)').matches) showTooltip(i, x, y); });
       node.addEventListener('mouseleave', () => { if (matchMedia('(hover: hover)').matches) hideTooltip(); });
-      node.addEventListener('focus', () => showTooltip(i, x, y));
-      node.addEventListener('blur', hideTooltip);
+      // Focus da tastiera (Tab) — ignorato se il focus arriva da un tap/click (gestito dal flag pointerFocus)
+      let viaPointer = false;
+      node.addEventListener('pointerdown', () => { viaPointer = true; });
+      node.addEventListener('focus', () => { if (!viaPointer) showTooltip(i, x, y); viaPointer = false; });
+      node.addEventListener('blur', () => { if (matchMedia('(hover: hover)').matches) hideTooltip(); });
       // Click/tap singolo: toggle immediato, funziona identico su desktop e mobile
       node.addEventListener('click', e => {
         e.stopPropagation();
