@@ -216,13 +216,19 @@
   .scarcity-box__copy p { color: rgba(0,0,0,0.6); font-size: 0.92rem; line-height: 1.55; }
   .seats-remaining { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(0,0,0,0.5); margin-top: 0.75rem; display: block; }
 
-  /* PHOTO SLIDER — infinite auto-scroll */
-  .photo-slider { position: relative; margin-top: 2.5rem; overflow: hidden; width: 100vw; margin-left: calc(-50vw + 50%); background: #111; }
-  .photo-slider__track { display: flex; gap: 4px; width: max-content; will-change: transform; }
-  .photo-slider__item { flex: none; overflow: hidden; height: 480px; }
-  .photo-slider__item img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: center center; filter: grayscale(15%); transition: filter 0.3s; pointer-events: none; }
-  .photo-slider__item:hover img { filter: grayscale(0%); }
-  @media (max-width: 600px) { .photo-slider__item { height: 300px; } }
+  /* PHOTO GRID — fissa, responsive */
+  .photo-slider { margin-top: 2.5rem; }
+  .photo-slider__track { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .photo-slider__item { overflow: hidden; border-radius: var(--radius-sm); aspect-ratio: 3/4; }
+  .photo-slider__item img { width: 100%; height: 100%; display: block; object-fit: cover; filter: grayscale(15%); transition: filter 0.3s, transform 0.3s; }
+  .photo-slider__item:hover img { filter: grayscale(0%); transform: scale(1.04); }
+  @media (max-width: 900px) {
+    .photo-slider__track { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 480px) {
+    .photo-slider__track { grid-template-columns: 1fr; gap: 10px; }
+    .photo-slider__item { aspect-ratio: 4/3; }
+  }
 
   /* AGENDA */
   .agenda-list { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0; }
@@ -569,16 +575,12 @@
         <li class="target-tag">Freelancer e Liberi Professionisti</li>
         <li class="target-tag">Consulenti d'Impresa</li>
       </ul>
-      <div class="photo-slider" id="photoSlider">
-        <div class="photo-slider__track" id="sliderTrack">
-          <div class="photo-slider__item"><img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/2.png" alt="NextGen evento"></div>
-          <div class="photo-slider__item"><img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/3.png" alt="NextGen evento"></div>
+      <div class="photo-slider">
+        <div class="photo-slider__track">
           <div class="photo-slider__item"><img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/4.png" alt="NextGen evento"></div>
-          <div class="photo-slider__item"><img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/5.png" alt="NextGen evento"></div>
-          <div class="photo-slider__item"><img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/6.png" alt="NextGen evento"></div>
-          <div class="photo-slider__item"><img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/7.png" alt="NextGen evento"></div>
-          <div class="photo-slider__item"><img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/8.png" alt="NextGen evento"></div>
+          <div class="photo-slider__item"><img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/3.png" alt="NextGen evento"></div>
           <div class="photo-slider__item"><img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/9.png" alt="NextGen evento"></div>
+          <div class="photo-slider__item"><img src="https://gafmqwiympfzervppqvi.supabase.co/storage/v1/object/public/assets/Events/7.png" alt="NextGen evento"></div>
         </div>
       </div>
     </div>
@@ -1225,47 +1227,7 @@ async function doLogout() {
 
 /* ════════ SLIDER ════════ */
 function initSlider() {
-  const track = document.getElementById('sliderTrack');
-  if (!track) return;
-
-  const N = 8; // numero foto originali
-  const PHOTO_W = Math.ceil(window.innerWidth / 3); // 3 foto per schermo, sempre
-  const GAP = 4;
-
-  // Imposta larghezza fissa su ogni item
-  function setSizes() {
-    const pw = Math.ceil(window.innerWidth / 3);
-    track.querySelectorAll('.photo-slider__item').forEach(el => {
-      el.style.width = pw + 'px';
-      el.style.minWidth = pw + 'px';
-    });
-  }
-
-  // Duplica per loop: originale + clone
-  const items = Array.from(track.children);
-  items.forEach(item => track.appendChild(item.cloneNode(true)));
-
-  setSizes();
-  window.addEventListener('resize', setSizes);
-
-  const singleSetWidth = () => (Math.ceil(window.innerWidth / 3) + GAP) * N;
-
-  let offset = 0;
-  let paused = false;
-
-  function step() {
-    if (!paused) {
-      offset += 0.5;
-      if (offset >= singleSetWidth()) offset = 0;
-      track.style.transform = `translateX(-${offset}px)`;
-    }
-    requestAnimationFrame(step);
-  }
-
-  track.addEventListener('mouseenter', () => paused = true);
-  track.addEventListener('mouseleave', () => paused = false);
-
-  requestAnimationFrame(step);
+  // Griglia fissa, nessuna animazione necessaria
 }
 
 /* ════════ TOAST ════════ */
