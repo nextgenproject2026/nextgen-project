@@ -142,7 +142,7 @@
   .table-center__cta:disabled { opacity: 0.4; cursor: not-allowed; }
 
   /* TOOLTIP */
-  .seat-tooltip { position: absolute; top: 0; left: 0; display: flex; align-items: center; gap: 12px; padding: 10px 16px 10px 10px; background: rgba(15,15,15,0.96); border: 1px solid var(--border-strong); border-radius: var(--radius-md); min-width: 240px; max-width: 290px; pointer-events: none; z-index: 20; opacity: 0; transition: opacity 0.18s ease; box-shadow: 0 12px 28px rgba(0,0,0,0.4); text-align: left; transform: translate(-50%, -50%); }
+  .seat-tooltip { position: fixed; top: 0; left: 0; display: flex; align-items: center; gap: 12px; padding: 10px 16px 10px 10px; background: rgba(15,15,15,0.96); border: 1px solid var(--border-strong); border-radius: var(--radius-md); min-width: 240px; max-width: 290px; pointer-events: none; z-index: 200; opacity: 0; transition: opacity 0.18s ease; box-shadow: 0 12px 28px rgba(0,0,0,0.4); text-align: left; transform: translate(-50%, -50%); }
   .seat-tooltip.is-visible { opacity: 1; }
   .seat-tooltip__avatar { width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--white); letter-spacing: 0.02em; flex-shrink: 0; overflow: hidden; }
   .seat-tooltip__avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
@@ -345,7 +345,7 @@
     .hero__title { font-size: clamp(2.4rem, 11vw, 4.5rem); margin-bottom: 2.5rem; }
     .hero__footer { flex-direction: column; align-items: flex-start; }
     .asterisk-pin { display: none; }
-    .seat-tooltip { min-width: 200px; max-width: 240px; }
+    .seat-tooltip { min-width: 180px; max-width: calc(100vw - 32px); }
   }
   @media (max-width: 600px) {
     section { padding: 4rem 0; }
@@ -840,7 +840,7 @@ function renderPage(d) {
   document.getElementById('hero-date').textContent = dateStr;
   document.getElementById('hero-location').textContent = d.location || '';
   const totalPublicSeats = d.capacity - FOUNDERS.length;
-  const publicSold = Math.max(0, d.tickets_sold - FOUNDERS.length);
+  const publicSold = Math.max(0, occupiedData.length - FOUNDERS.length);
   const avail = Math.max(0, totalPublicSeats - publicSold);
   document.getElementById('hero-seats').textContent = totalPublicSeats + ' posti disponibili';
 
@@ -952,10 +952,12 @@ function renderChairs(capacity) {
     if (isOccupied) {
       const occ = occupiedData.find(d => d.seat === i);
       node.setAttribute('aria-label', `Posto ${i} — ${occ?.name || 'Partecipante'}`);
-      node.addEventListener('mouseenter', () => showTooltip(i, x, y));
-      node.addEventListener('mouseleave', hideTooltip);
+      // Hover per desktop (mouse reale, non simulato da touch)
+      node.addEventListener('mouseenter', () => { if (matchMedia('(hover: hover)').matches) showTooltip(i, x, y); });
+      node.addEventListener('mouseleave', () => { if (matchMedia('(hover: hover)').matches) hideTooltip(); });
       node.addEventListener('focus', () => showTooltip(i, x, y));
       node.addEventListener('blur', hideTooltip);
+      // Click/tap singolo: toggle immediato, funziona identico su desktop e mobile
       node.addEventListener('click', e => {
         e.stopPropagation();
         const tooltip = document.getElementById('seatTooltip');
@@ -980,8 +982,9 @@ function getNextAvailable(occupied, capacity) {
 
 function showTooltip(seat, svgX, svgY) {
   const tooltip = document.getElementById('seatTooltip');
+  const stage = document.getElementById('tableStage');
   const data = occupiedData.find(d => d.seat === seat);
-  if (!data || !tooltip) return;
+  if (!data || !tooltip || !stage) return;
   document.getElementById('ttName').textContent = data.name;
   document.getElementById('ttRole').textContent = data.role || 'Partecipante';
   const avatarEl = document.getElementById('ttAvatar');
@@ -991,14 +994,47 @@ function showTooltip(seat, svgX, svgY) {
     avatarEl.textContent = data.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   }
   tooltip.dataset.seat = String(seat);
+
   const dx = svgX - 250, dy = svgY - 250;
   const dist = Math.sqrt(dx*dx + dy*dy) || 1;
   const ttSvgX = 250 + (dx / dist) * 275;
   const ttSvgY = 250 + (dy / dist) * 275;
-  tooltip.style.left = `${(ttSvgX / 500) * 100}%`;
-  tooltip.style.top  = `${(ttSvgY / 500) * 100}%`;
-  tooltip.setAttribute('aria-hidden', 'false');
+
+  // Calcola posizione in pixel reali rispetto al contenitore .table-stage
+  const stageRect = stage.getBoundingClientRect();
+  let pxLeft = (ttSvgX / 500) * stageRect.width;
+  let pxTop  = (ttSvgY / 500) * stageRect.height;
+
+  // Misura il tooltip per sapere quanto sforerebbe (temporaneamente visibile fuori schermo per misurarlo)
+  tooltip.style.left = pxLeft + 'px';
+  tooltip.style.top = pxTop + 'px';
   tooltip.classList.add('is-visible');
+  const ttRect = tooltip.getBoundingClientRect();
+  const margin = 12;
+
+  // Clamp orizzontale: il tooltip è centrato (transform: translate(-50%,-50%)),
+  // quindi il suo bordo sinistro reale è pxLeft - width/2 (in coordinate viewport: stageRect.left + pxLeft - width/2)
+  const halfW = ttRect.width / 2;
+  const halfH = ttRect.height / 2;
+  const viewportLeftEdge = stageRect.left + pxLeft - halfW;
+  const viewportRightEdge = stageRect.left + pxLeft + halfW;
+  const viewportTopEdge = stageRect.top + pxTop - halfH;
+  const viewportBottomEdge = stageRect.top + pxTop + halfH;
+
+  if (viewportLeftEdge < margin) {
+    pxLeft += (margin - viewportLeftEdge);
+  } else if (viewportRightEdge > window.innerWidth - margin) {
+    pxLeft -= (viewportRightEdge - (window.innerWidth - margin));
+  }
+  if (viewportTopEdge < margin) {
+    pxTop += (margin - viewportTopEdge);
+  } else if (viewportBottomEdge > window.innerHeight - margin) {
+    pxTop -= (viewportBottomEdge - (window.innerHeight - margin));
+  }
+
+  tooltip.style.left = pxLeft + 'px';
+  tooltip.style.top = pxTop + 'px';
+  tooltip.setAttribute('aria-hidden', 'false');
 }
 
 function hideTooltip() {
