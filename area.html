@@ -1039,38 +1039,69 @@
     }
 
     let editingEventId = null;
+    let editingEventType = 'meetup';
 
     async function openEditModal(id) {
       const { data: ev } = await sb.from('events').select('*').eq('id', id).single();
       if (!ev) return;
       editingEventId = id;
+      editingEventType = ev.event_type || 'meetup';
 
-      // Popola i campi del form con i dati esistenti
-      document.getElementById('ev-title').value = ev.title || '';
-      document.getElementById('ev-desc').value = ev.description || '';
-      document.getElementById('ev-date').value = ev.event_date ? ev.event_date.slice(0,16) : '';
-      document.getElementById('ev-location').value = ev.location || '';
-      document.getElementById('ev-price-eb').value = ev.price_early_bird ? (ev.price_early_bird / 100) : 18;
-      document.getElementById('ev-price-std').value = ev.price_standard ? (ev.price_standard / 100) : 20;
-      document.getElementById('ev-price-site').value = ev.price_onsite ? (ev.price_onsite / 100) : 25;
-      document.getElementById('ev-eb-days').value = ev.price_early_bird_days || 5;
-      document.getElementById('ev-open-at').value = ev.early_bird_start ? ev.early_bird_start.slice(0,16) : '';
-      document.getElementById('ev-capacity').value = ev.capacity || 100;
-      document.getElementById('ev-speaker-name').value = ev.speaker_name || '';
-      document.getElementById('ev-speaker-bio').value = ev.speaker_bio || '';
-      document.getElementById('ev-agenda').value = ev.program || '';
-      document.getElementById('ev-cover').value = ev.cover_image_url || '';
-      document.getElementById('ev-status').value = ev.is_published ? 'true' : 'false';
+      // Mostra il form giusto in base al tipo, saltando lo step di scelta
+      document.getElementById('ev-type-step').style.display = 'none';
 
-      // Cambia il bottone da "Crea" a "Salva modifiche"
-      const btn = document.querySelector('#tab-admin .btn-primary[onclick="createNewEvent()"]');
-      if (btn) {
-        btn.textContent = 'Salva modifiche';
-        btn.onclick = saveEditEvent;
+      if (editingEventType === 'thinktank') {
+        document.getElementById('ev-form-meetup').style.display = 'none';
+        document.getElementById('ev-form-thinktank').style.display = 'block';
+
+        document.getElementById('tt-title').value = ev.title || '';
+        document.getElementById('tt-desc').value = ev.description || '';
+        document.getElementById('tt-date').value = ev.event_date ? ev.event_date.slice(0,16) : '';
+        document.getElementById('tt-location').value = ev.location || '';
+        document.getElementById('tt-price').value = ev.price_standard ? (ev.price_standard / 100) : 80;
+        document.getElementById('tt-price-eb').value = (ev.price_early_bird && ev.price_early_bird !== ev.price_standard) ? (ev.price_early_bird / 100) : '';
+        document.getElementById('tt-eb-days').value = ev.price_early_bird_days || 5;
+        document.getElementById('tt-capacity').value = ev.capacity || 30;
+        document.getElementById('tt-open-at').value = ev.early_bird_start ? ev.early_bird_start.slice(0,16) : '';
+        document.getElementById('tt-theme').value = ev.speaker_name || '';
+        document.getElementById('tt-agenda').value = ev.program || '';
+        document.getElementById('tt-cover').value = ev.cover_image_url || '';
+        document.getElementById('tt-status').value = ev.is_published ? 'true' : 'false';
+
+        const ttBtn = document.querySelector('#ev-form-thinktank .btn-primary');
+        if (ttBtn) { ttBtn.textContent = 'Salva modifiche'; ttBtn.onclick = saveEditEvent; }
+        addCancelEditButton('ev-form-thinktank');
+      } else {
+        document.getElementById('ev-form-thinktank').style.display = 'none';
+        document.getElementById('ev-form-meetup').style.display = 'block';
+
+        document.getElementById('ev-title').value = ev.title || '';
+        document.getElementById('ev-desc').value = ev.description || '';
+        document.getElementById('ev-date').value = ev.event_date ? ev.event_date.slice(0,16) : '';
+        document.getElementById('ev-location').value = ev.location || '';
+        document.getElementById('ev-price-eb').value = ev.price_early_bird ? (ev.price_early_bird / 100) : 18;
+        document.getElementById('ev-price-std').value = ev.price_standard ? (ev.price_standard / 100) : 20;
+        document.getElementById('ev-price-site').value = ev.price_onsite ? (ev.price_onsite / 100) : 25;
+        document.getElementById('ev-eb-days').value = ev.price_early_bird_days || 5;
+        document.getElementById('ev-open-at').value = ev.early_bird_start ? ev.early_bird_start.slice(0,16) : '';
+        document.getElementById('ev-capacity').value = ev.capacity || 100;
+        document.getElementById('ev-speaker-name').value = ev.speaker_name || '';
+        document.getElementById('ev-speaker-bio').value = ev.speaker_bio || '';
+        document.getElementById('ev-agenda').value = ev.program || '';
+        document.getElementById('ev-cover').value = ev.cover_image_url || '';
+        document.getElementById('ev-status').value = ev.is_published ? 'true' : 'false';
+
+        const btn = document.querySelector('#ev-form-meetup .btn-primary');
+        if (btn) { btn.textContent = 'Salva modifiche'; btn.onclick = saveEditEvent; }
+        addCancelEditButton('ev-form-meetup');
       }
 
-      // Aggiungi bottone annulla modifica se non esiste
-      const actions = document.querySelector('#tab-admin [style*="gap:12px"]');
+      showMsg('event-msg', 'Stai modificando: ' + ev.title, 'success');
+      document.getElementById('tab-admin').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function addCancelEditButton(formId) {
+      const actions = document.querySelector('#' + formId + ' [style*="gap:12px"]');
       if (actions && !document.getElementById('btn-cancel-edit')) {
         const cancelBtn = document.createElement('button');
         cancelBtn.id = 'btn-cancel-edit';
@@ -1079,35 +1110,65 @@
         cancelBtn.onclick = cancelEdit;
         actions.appendChild(cancelBtn);
       }
-
-      showMsg('event-msg', 'Stai modificando: ' + ev.title, 'success');
-      // Scroll al form
-      document.getElementById('tab-admin').scrollIntoView({ behavior: 'smooth' });
     }
 
     async function saveEditEvent() {
       if (!editingEventId) return;
-      const priceEb = Math.round(parseFloat(document.getElementById('ev-price-eb').value || 18) * 100);
-      const priceStd = Math.round(parseFloat(document.getElementById('ev-price-std').value || 20) * 100);
-      const priceSite = Math.round(parseFloat(document.getElementById('ev-price-site').value || 25) * 100);
-      const coverUrl = await uploadCoverIfNeeded();
-      const { error } = await sb.from('events').update({
-        title: document.getElementById('ev-title').value,
-        description: document.getElementById('ev-desc').value,
-        event_date: document.getElementById('ev-date').value,
-        location: document.getElementById('ev-location').value,
-        price_early_bird: priceEb,
-        price_standard: priceStd,
-        price_onsite: priceSite,
-        price_early_bird_days: parseInt(document.getElementById('ev-eb-days').value || 5),
-        early_bird_start: document.getElementById('ev-open-at').value || null,
-        capacity: parseInt(document.getElementById('ev-capacity').value || 100),
-        speaker_name: document.getElementById('ev-speaker-name').value || null,
-        speaker_bio: document.getElementById('ev-speaker-bio').value || null,
-        program: document.getElementById('ev-agenda').value || null,
-        cover_image_url: coverUrl,
-        is_published: document.getElementById('ev-status').value === 'true'
-      }).eq('id', editingEventId);
+
+      let payload;
+      if (editingEventType === 'thinktank') {
+        const priceStd = Math.round(parseFloat(document.getElementById('tt-price').value || 80) * 100);
+        const ebRaw = document.getElementById('tt-price-eb').value;
+        const priceEb = ebRaw ? Math.round(parseFloat(ebRaw) * 100) : priceStd;
+        const ebDays = parseInt(document.getElementById('tt-eb-days').value || 5);
+        const openAt = document.getElementById('tt-open-at').value || null;
+        let ebDeadline = null;
+        if (ebRaw && openAt) ebDeadline = new Date(new Date(openAt).getTime() + ebDays * 24 * 60 * 60 * 1000).toISOString();
+        const coverUrl = await uploadCoverTTIfNeeded() || document.getElementById('tt-cover').value || null;
+
+        payload = {
+          title: document.getElementById('tt-title').value,
+          description: document.getElementById('tt-desc').value,
+          event_date: document.getElementById('tt-date').value,
+          location: document.getElementById('tt-location').value,
+          price_standard: priceStd,
+          price_early_bird: priceEb,
+          price_onsite: priceStd,
+          price_early_bird_days: ebDays,
+          early_bird_start: openAt,
+          early_bird_deadline: ebDeadline,
+          capacity: Math.min(parseInt(document.getElementById('tt-capacity').value || 30), 30),
+          speaker_name: document.getElementById('tt-theme').value || null,
+          program: document.getElementById('tt-agenda').value || null,
+          cover_image_url: coverUrl,
+          is_published: document.getElementById('tt-status').value === 'true'
+        };
+      } else {
+        const priceEb = Math.round(parseFloat(document.getElementById('ev-price-eb').value || 18) * 100);
+        const priceStd = Math.round(parseFloat(document.getElementById('ev-price-std').value || 20) * 100);
+        const priceSite = Math.round(parseFloat(document.getElementById('ev-price-site').value || 25) * 100);
+        const coverUrl = await uploadCoverIfNeeded() || document.getElementById('ev-cover').value || null;
+
+        payload = {
+          title: document.getElementById('ev-title').value,
+          description: document.getElementById('ev-desc').value,
+          event_date: document.getElementById('ev-date').value,
+          location: document.getElementById('ev-location').value,
+          price_early_bird: priceEb,
+          price_standard: priceStd,
+          price_onsite: priceSite,
+          price_early_bird_days: parseInt(document.getElementById('ev-eb-days').value || 5),
+          early_bird_start: document.getElementById('ev-open-at').value || null,
+          capacity: parseInt(document.getElementById('ev-capacity').value || 100),
+          speaker_name: document.getElementById('ev-speaker-name').value || null,
+          speaker_bio: document.getElementById('ev-speaker-bio').value || null,
+          program: document.getElementById('ev-agenda').value || null,
+          cover_image_url: coverUrl,
+          is_published: document.getElementById('ev-status').value === 'true'
+        };
+      }
+
+      const { error } = await sb.from('events').update(payload).eq('id', editingEventId);
 
       if (error) return showMsg('event-msg', 'Errore: ' + error.message, 'error');
       showMsg('event-msg', 'Evento aggiornato con successo!', 'success');
@@ -1117,7 +1178,9 @@
 
     function cancelEdit() {
       editingEventId = null;
-      // Resetta il form
+      editingEventType = 'meetup';
+
+      // Resetta form Meetup
       ['ev-title','ev-desc','ev-location','ev-speaker-name','ev-speaker-bio','ev-agenda','ev-cover'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
@@ -1129,13 +1192,28 @@
       document.getElementById('ev-capacity').value = 100;
       document.getElementById('ev-status').value = 'false';
 
-      // Ripristina bottone crea
-      const btn = document.querySelector('#tab-admin .btn-primary');
-      if (btn) { btn.textContent = 'Crea evento'; btn.onclick = createNewEvent; }
+      // Resetta form ThinkTank
+      ['tt-title','tt-desc','tt-location','tt-theme','tt-agenda','tt-cover','tt-price-eb'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      document.getElementById('tt-price').value = 80;
+      document.getElementById('tt-eb-days').value = 5;
+      document.getElementById('tt-capacity').value = 30;
+      document.getElementById('tt-status').value = 'false';
+
+      // Ripristina bottoni crea
+      const btnMeetup = document.querySelector('#ev-form-meetup .btn-primary');
+      if (btnMeetup) { btnMeetup.textContent = 'Crea Meetup'; btnMeetup.onclick = createNewEvent; }
+      const btnTT = document.querySelector('#ev-form-thinktank .btn-primary');
+      if (btnTT) { btnTT.textContent = 'Crea ThinkTank'; btnTT.onclick = createNewThinkTank; }
 
       // Rimuovi bottone annulla
       const cancelBtn = document.getElementById('btn-cancel-edit');
       if (cancelBtn) cancelBtn.remove();
+
+      // Torna allo step di scelta tipo
+      resetEventType();
 
       const msgEl = document.getElementById('event-msg');
       if (msgEl) msgEl.className = 'msg';
