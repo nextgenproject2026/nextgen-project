@@ -794,19 +794,19 @@ async function init() {
   }
   ev = eventData;
 
-  // Carica partecipanti confermati per la tavola
-  const { data: tickets } = await sb.from('tickets')
-    .select('user_id, profiles(full_name, avatar_url, role, company)')
-    .eq('event_id', id)
-    .eq('status', 'confirmed')
-    .not('user_id', 'in', `(${FOUNDERS.map(f => f.id).join(',')})`);
+  // Carica partecipanti confermati per la tavola (via funzione pubblica, bypassa RLS in modo controllato)
+  const founderIds = FOUNDERS.map(f => f.id);
+  const { data: seats, error: seatsError } = await sb.rpc('get_thinktank_seats', { p_event_id: id });
+  if (seatsError) console.error('Errore caricamento posti tavola:', seatsError.message);
+
+  const publicTickets = (seats || []).filter(s => !founderIds.includes(s.user_id));
 
   // Posti pubblici: partono dal 6 in poi
-  const publicOccupied = (tickets || []).map((t, i) => ({
+  const publicOccupied = publicTickets.map((t, i) => ({
     seat: FOUNDERS.length + 1 + i,
-    name: t.profiles?.full_name || 'Partecipante',
-    avatar: t.profiles?.avatar_url || null,
-    role: [t.profiles?.role, t.profiles?.company].filter(Boolean).join(' @ ') || ''
+    name: t.full_name || 'Partecipante',
+    avatar: t.avatar_url || null,
+    role: [t.role, t.company].filter(Boolean).join(' @ ') || ''
   }));
 
   // Merge founder + pubblico
