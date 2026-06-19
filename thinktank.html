@@ -1000,36 +1000,35 @@ function showTooltip(seat, svgX, svgY) {
   const ttSvgX = 250 + (dx / dist) * 275;
   const ttSvgY = 250 + (dy / dist) * 275;
 
-  // Calcola posizione in pixel reali rispetto al contenitore .table-stage
+  // Coordinate ASSOLUTE rispetto alla viewport (il tooltip è position:fixed)
   const stageRect = stage.getBoundingClientRect();
-  let pxLeft = (ttSvgX / 500) * stageRect.width;
-  let pxTop  = (ttSvgY / 500) * stageRect.height;
+  let pxLeft = stageRect.left + (ttSvgX / 500) * stageRect.width;
+  let pxTop  = stageRect.top + (ttSvgY / 500) * stageRect.height;
 
-  // Misura il tooltip per sapere quanto sforerebbe (temporaneamente visibile fuori schermo per misurarlo)
   tooltip.style.left = pxLeft + 'px';
   tooltip.style.top = pxTop + 'px';
   tooltip.classList.add('is-visible');
   const ttRect = tooltip.getBoundingClientRect();
   const margin = 12;
+  const topMargin = 80; // evita la sticky nav
 
-  // Clamp orizzontale: il tooltip è centrato (transform: translate(-50%,-50%)),
-  // quindi il suo bordo sinistro reale è pxLeft - width/2 (in coordinate viewport: stageRect.left + pxLeft - width/2)
+  // Clamp: il tooltip è centrato (transform: translate(-50%,-50%))
   const halfW = ttRect.width / 2;
   const halfH = ttRect.height / 2;
-  const viewportLeftEdge = stageRect.left + pxLeft - halfW;
-  const viewportRightEdge = stageRect.left + pxLeft + halfW;
-  const viewportTopEdge = stageRect.top + pxTop - halfH;
-  const viewportBottomEdge = stageRect.top + pxTop + halfH;
+  const edgeLeft = pxLeft - halfW;
+  const edgeRight = pxLeft + halfW;
+  const edgeTop = pxTop - halfH;
+  const edgeBottom = pxTop + halfH;
 
-  if (viewportLeftEdge < margin) {
-    pxLeft += (margin - viewportLeftEdge);
-  } else if (viewportRightEdge > window.innerWidth - margin) {
-    pxLeft -= (viewportRightEdge - (window.innerWidth - margin));
+  if (edgeLeft < margin) {
+    pxLeft += (margin - edgeLeft);
+  } else if (edgeRight > window.innerWidth - margin) {
+    pxLeft -= (edgeRight - (window.innerWidth - margin));
   }
-  if (viewportTopEdge < margin) {
-    pxTop += (margin - viewportTopEdge);
-  } else if (viewportBottomEdge > window.innerHeight - margin) {
-    pxTop -= (viewportBottomEdge - (window.innerHeight - margin));
+  if (edgeTop < topMargin) {
+    pxTop += (topMargin - edgeTop);
+  } else if (edgeBottom > window.innerHeight - margin) {
+    pxTop -= (edgeBottom - (window.innerHeight - margin));
   }
 
   tooltip.style.left = pxLeft + 'px';
