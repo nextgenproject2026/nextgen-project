@@ -735,17 +735,18 @@
       const priceStd = Math.round(parseFloat(document.getElementById('ev-price-std').value || 20) * 100);
       const priceSite = Math.round(parseFloat(document.getElementById('ev-price-site').value || 25) * 100);
       const coverUrl = await uploadCoverIfNeeded();
+      const openAtRaw = document.getElementById('ev-open-at').value;
       const { data, error } = await sb.from('events').insert({
         event_type: 'meetup',
         title,
         description: document.getElementById('ev-desc').value,
-        event_date: date,
+        event_date: italianTimeToUTC(date),
         location: document.getElementById('ev-location').value,
         price_early_bird: priceEb,
         price_standard: priceStd,
         price_onsite: priceSite,
         price_early_bird_days: parseInt(document.getElementById('ev-eb-days').value || 5),
-        early_bird_start: document.getElementById('ev-open-at').value || null,
+        early_bird_start: openAtRaw ? italianTimeToUTC(openAtRaw) : null,
         capacity: parseInt(document.getElementById('ev-capacity').value || 100),
         speaker_name: document.getElementById('ev-speaker-name').value || null,
         speaker_bio: document.getElementById('ev-speaker-bio').value || null,
@@ -767,27 +768,27 @@
       const ebRaw = document.getElementById('tt-price-eb').value;
       const priceEb = ebRaw ? Math.round(parseFloat(ebRaw) * 100) : null;
       const ebDays = parseInt(document.getElementById('tt-eb-days').value || 5);
-      const openAt = document.getElementById('tt-open-at').value || null;
+      const openAtRaw = document.getElementById('tt-open-at').value || null;
       const capacity = Math.min(parseInt(document.getElementById('tt-capacity').value || 30), 30);
       const coverUrl = await uploadCoverTTIfNeeded();
 
       // Calcola scadenza early bird: data apertura + giorni EB
       let ebDeadline = null;
-      if (priceEb && openAt) {
-        ebDeadline = new Date(new Date(openAt).getTime() + ebDays * 24 * 60 * 60 * 1000).toISOString();
+      if (priceEb && openAtRaw) {
+        ebDeadline = new Date(new Date(italianTimeToUTC(openAtRaw)).getTime() + ebDays * 24 * 60 * 60 * 1000).toISOString();
       }
 
       const { data, error } = await sb.from('events').insert({
         event_type: 'thinktank',
         title,
         description: document.getElementById('tt-desc').value,
-        event_date: date,
+        event_date: italianTimeToUTC(date),
         location: document.getElementById('tt-location').value,
         price_standard: priceStd,
         price_early_bird: priceEb || priceStd,
         price_onsite: priceStd,
         price_early_bird_days: ebDays,
-        early_bird_start: openAt,
+        early_bird_start: openAtRaw ? italianTimeToUTC(openAtRaw) : null,
         early_bird_deadline: ebDeadline,
         capacity,
         speaker_name: document.getElementById('tt-theme').value || null,
@@ -1041,6 +1042,33 @@
     let editingEventId = null;
     let editingEventType = 'meetup';
 
+    // Converte un valore datetime-local (interpretato come ora italiana) in ISO UTC corretto
+    function italianTimeToUTC(localDateTimeStr) {
+      if (!localDateTimeStr) return null;
+      // localDateTimeStr es: "2026-07-16T19:00"
+      // Determina l'offset CEST (+2) o CET (+1) in base al mese (approssimazione DST EU: ultima dom marzo - ultima dom ottobre)
+      const [datePart, timePart] = localDateTimeStr.split('T');
+      const [y, m, d] = datePart.split('-').map(Number);
+      const [hh, mm] = timePart.split(':').map(Number);
+      // Approssimazione: aprile-settembre = CEST (+2), resto CET (+1). Sufficiente per eventi serali in quei mesi.
+      const isDST = m >= 4 && m <= 9;
+      const offsetHours = isDST ? 2 : 1;
+      // Crea la data come se fosse UTC, poi sottrae l'offset per ottenere il vero UTC
+      const utcMillis = Date.UTC(y, m - 1, d, hh - offsetHours, mm);
+      return new Date(utcMillis).toISOString();
+    }
+
+    // Converte un timestamp ISO (UTC) salvato su DB nel valore da mostrare in un input datetime-local (ora italiana)
+    function utcToItalianLocalInput(isoStr) {
+      if (!isoStr) return '';
+      const d = new Date(isoStr);
+      // Usa Intl per ottenere i componenti in Europe/Rome
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false
+      }).formatToParts(d).reduce((acc, p) => { acc[p.type] = p.value; return acc; }, {});
+      return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+    }
+
     async function openEditModal(id) {
       const { data: ev } = await sb.from('events').select('*').eq('id', id).single();
       if (!ev) return;
@@ -1056,13 +1084,13 @@
 
         document.getElementById('tt-title').value = ev.title || '';
         document.getElementById('tt-desc').value = ev.description || '';
-        document.getElementById('tt-date').value = ev.event_date ? ev.event_date.slice(0,16) : '';
+        document.getElementById('tt-date').value = ev.event_date ? utcToItalianLocalInput(ev.event_date) : '';
         document.getElementById('tt-location').value = ev.location || '';
         document.getElementById('tt-price').value = ev.price_standard ? (ev.price_standard / 100) : 80;
         document.getElementById('tt-price-eb').value = (ev.price_early_bird && ev.price_early_bird !== ev.price_standard) ? (ev.price_early_bird / 100) : '';
         document.getElementById('tt-eb-days').value = ev.price_early_bird_days || 5;
         document.getElementById('tt-capacity').value = ev.capacity || 30;
-        document.getElementById('tt-open-at').value = ev.early_bird_start ? ev.early_bird_start.slice(0,16) : '';
+        document.getElementById('tt-open-at').value = ev.early_bird_start ? utcToItalianLocalInput(ev.early_bird_start) : '';
         document.getElementById('tt-theme').value = ev.speaker_name || '';
         document.getElementById('tt-agenda').value = ev.program || '';
         document.getElementById('tt-cover').value = ev.cover_image_url || '';
@@ -1077,13 +1105,13 @@
 
         document.getElementById('ev-title').value = ev.title || '';
         document.getElementById('ev-desc').value = ev.description || '';
-        document.getElementById('ev-date').value = ev.event_date ? ev.event_date.slice(0,16) : '';
+        document.getElementById('ev-date').value = ev.event_date ? utcToItalianLocalInput(ev.event_date) : '';
         document.getElementById('ev-location').value = ev.location || '';
         document.getElementById('ev-price-eb').value = ev.price_early_bird ? (ev.price_early_bird / 100) : 18;
         document.getElementById('ev-price-std').value = ev.price_standard ? (ev.price_standard / 100) : 20;
         document.getElementById('ev-price-site').value = ev.price_onsite ? (ev.price_onsite / 100) : 25;
         document.getElementById('ev-eb-days').value = ev.price_early_bird_days || 5;
-        document.getElementById('ev-open-at').value = ev.early_bird_start ? ev.early_bird_start.slice(0,16) : '';
+        document.getElementById('ev-open-at').value = ev.early_bird_start ? utcToItalianLocalInput(ev.early_bird_start) : '';
         document.getElementById('ev-capacity').value = ev.capacity || 100;
         document.getElementById('ev-speaker-name').value = ev.speaker_name || '';
         document.getElementById('ev-speaker-bio').value = ev.speaker_bio || '';
@@ -1121,21 +1149,21 @@
         const ebRaw = document.getElementById('tt-price-eb').value;
         const priceEb = ebRaw ? Math.round(parseFloat(ebRaw) * 100) : priceStd;
         const ebDays = parseInt(document.getElementById('tt-eb-days').value || 5);
-        const openAt = document.getElementById('tt-open-at').value || null;
+        const openAtRaw = document.getElementById('tt-open-at').value || null;
         let ebDeadline = null;
-        if (ebRaw && openAt) ebDeadline = new Date(new Date(openAt).getTime() + ebDays * 24 * 60 * 60 * 1000).toISOString();
+        if (ebRaw && openAtRaw) ebDeadline = new Date(new Date(italianTimeToUTC(openAtRaw)).getTime() + ebDays * 24 * 60 * 60 * 1000).toISOString();
         const coverUrl = await uploadCoverTTIfNeeded() || document.getElementById('tt-cover').value || null;
 
         payload = {
           title: document.getElementById('tt-title').value,
           description: document.getElementById('tt-desc').value,
-          event_date: document.getElementById('tt-date').value,
+          event_date: italianTimeToUTC(document.getElementById('tt-date').value),
           location: document.getElementById('tt-location').value,
           price_standard: priceStd,
           price_early_bird: priceEb,
           price_onsite: priceStd,
           price_early_bird_days: ebDays,
-          early_bird_start: openAt,
+          early_bird_start: openAtRaw ? italianTimeToUTC(openAtRaw) : null,
           early_bird_deadline: ebDeadline,
           capacity: Math.min(parseInt(document.getElementById('tt-capacity').value || 30), 30),
           speaker_name: document.getElementById('tt-theme').value || null,
@@ -1148,17 +1176,18 @@
         const priceStd = Math.round(parseFloat(document.getElementById('ev-price-std').value || 20) * 100);
         const priceSite = Math.round(parseFloat(document.getElementById('ev-price-site').value || 25) * 100);
         const coverUrl = await uploadCoverIfNeeded() || document.getElementById('ev-cover').value || null;
+        const openAtRaw = document.getElementById('ev-open-at').value || null;
 
         payload = {
           title: document.getElementById('ev-title').value,
           description: document.getElementById('ev-desc').value,
-          event_date: document.getElementById('ev-date').value,
+          event_date: italianTimeToUTC(document.getElementById('ev-date').value),
           location: document.getElementById('ev-location').value,
           price_early_bird: priceEb,
           price_standard: priceStd,
           price_onsite: priceSite,
           price_early_bird_days: parseInt(document.getElementById('ev-eb-days').value || 5),
-          early_bird_start: document.getElementById('ev-open-at').value || null,
+          early_bird_start: openAtRaw ? italianTimeToUTC(openAtRaw) : null,
           capacity: parseInt(document.getElementById('ev-capacity').value || 100),
           speaker_name: document.getElementById('ev-speaker-name').value || null,
           speaker_bio: document.getElementById('ev-speaker-bio').value || null,
