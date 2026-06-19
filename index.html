@@ -939,7 +939,7 @@
       const SB_URL = 'https://gafmqwiympfzervppqvi.supabase.co';
       const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhZm1xd2l5bXBmemVydnBwcXZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MTQ1NTIsImV4cCI6MjA5MTk5MDU1Mn0.7xDiXBLf_Zf85hNP0Zq1nQXsX0Vz7dRkE8XROafRpII';
       const sb = supabase.createClient(SB_URL, SB_KEY);
-      const { data: events } = await sb.from('events_with_availability').select('*').order('event_date', { ascending: true });
+      const { data: events } = await sb.from('events_with_availability').select('*').order('event_date', { ascending: false });
       const grid = document.getElementById('events-grid');
       if (!events || !events.length) return;
       const now = new Date();
