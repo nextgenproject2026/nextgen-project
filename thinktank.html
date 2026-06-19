@@ -789,7 +789,7 @@ function renderPage(d) {
   const titleWords = (d.title || 'NextGen ThinkTank').split(' ');
   document.getElementById('hero-line1').textContent = titleWords.slice(0, Math.ceil(titleWords.length / 2)).join(' ');
   document.getElementById('hero-line2').textContent = 'tavola rotonda';
-  document.getElementById('hero-line3').textContent = d.location || '';
+  document.getElementById('hero-line3').textContent = '';
   document.getElementById('hero-desc').textContent = d.description || 'Un tavolo di confronto per imprenditori, founder e professionisti d\'eccellenza.';
   const dateStr = new Date(d.event_date).toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' });
   document.getElementById('hero-date').textContent = dateStr;
