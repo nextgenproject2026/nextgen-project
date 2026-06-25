@@ -68,6 +68,7 @@ module.exports = async (req, res) => {
 
     // Formatta data evento
     const eventDate = new Date(event.event_date).toLocaleDateString('it-IT', {
+      timeZone: 'Europe/Rome',
       weekday: 'long',
       day: 'numeric',
       month: 'long',
